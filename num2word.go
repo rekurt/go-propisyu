@@ -1,7 +1,18 @@
 // Package propisyu provides helpers for converting integers to Russian words.
 package propisyu
 
-import "strings"
+import (
+	"errors"
+	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/shopspring/decimal"
+)
+
+var (
+	ErrNumberTooLarge = errors.New("number is too large to convert")
+)
 
 type Gender int
 
@@ -71,6 +82,71 @@ func IntToWordsGender(n int, gender Gender) string {
 	return convertIntToWords(n, newDictionary(gender))
 }
 
+// DecimalToWords converts a decimal number string to Russian words.
+// The input should be a string like "123.45" or "6453345242432.42".
+// Returns the number in Russian with proper declensions, e.g.
+// "сто двадцать три целых сорок пять сотых".
+// Only the first two decimal places are used; additional digits are truncated.
+func DecimalToWords(decimalStr string) (string, error) {
+	parts := strings.SplitN(decimalStr, ".", 2)
+
+	whole, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return "", fmt.Errorf("invalid whole number part: %w", err)
+	}
+
+	fraction := "00"
+	if len(parts) == 2 {
+		fraction = parts[1]
+		if len(fraction) > 2 {
+			fraction = fraction[:2]
+		}
+		for len(fraction) < 2 {
+			fraction += "0"
+		}
+	}
+
+	hundredths, err := strconv.Atoi(fraction)
+	if err != nil {
+		return "", fmt.Errorf("invalid fractional part: %w", err)
+	}
+
+	result := fmt.Sprintf(
+		"%s целых %s %s",
+		IntToWords(whole),
+		IntToWordsGender(hundredths, GenderFeminine),
+		Decline(hundredths, "сотая", "сотых", "сотых"),
+	)
+
+	return result, nil
+}
+
+// DecimalValueToWords converts a decimal.Decimal value to Russian words.
+// The input should be a decimal.Decimal value like decimal.NewFromFloat(123.45).
+// Returns the number in Russian with proper declensions, e.g.
+// "сто двадцать три целых сорок пять сотых".
+// Only the first two decimal places are used; additional digits are truncated.
+func DecimalValueToWords(d decimal.Decimal) (string, error) {
+	whole := d.IntPart()
+
+	if whole > int64(^uint(0)>>1) || whole < -int64(^uint(0)>>1)-1 {
+		return "", fmt.Errorf("%w: %v", ErrNumberTooLarge, whole)
+	}
+
+	fractionalPart := d.Sub(decimal.NewFromInt(whole))
+
+	hundredths := fractionalPart.Mul(decimal.NewFromInt(100)).Abs().Truncate(0).IntPart()
+
+	result := fmt.Sprintf(
+		"%s целых %s %s",
+		IntToWords(int(whole)),
+		IntToWordsGender(int(hundredths), GenderFeminine),
+		Decline(int(hundredths), "сотая", "сотых", "сотых"),
+	)
+
+	return result, nil
+}
+
 func convertIntToWords(n int, dict *dictionary) string {
 	if n == 0 {
 		return "ноль"
@@ -109,7 +185,9 @@ func (d *dictionary) triadToWords(n, order int) string {
 	o := n % 10
 
 	if h > 0 {
-		s = append(s, []string{"сто", "двести", "триста", "четыреста", "пятьсот", "шестьсот", "семьсот", "восемьсот", "девятьсот"}[h-1])
+		s = append(s, []string{
+			"сто", "двести", "триста", "четыреста", "пятьсот", "шестьсот", "семьсот", "восемьсот", "девятьсот",
+		}[h-1])
 	}
 
 	if t == 1 {

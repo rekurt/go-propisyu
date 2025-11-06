@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -199,6 +200,192 @@ func TestGetDeclensionEdgeCases(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			assert.Equal(t, tc.want, getDeclension(tc.num, "товар", "товара", "товаров"))
+		})
+	}
+}
+
+func TestDecimalToWords(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name    string
+		decimal string
+		want    string
+		wantErr bool
+	}{
+		{
+			name:    "simple decimal",
+			decimal: "123.45",
+			want:    "сто двадцать три целых сорок пять сотых",
+			wantErr: false,
+		},
+		{
+			name:    "large number from README",
+			decimal: "6453345242432.42",
+			want:    "шесть триллионов четыреста пятьдесят три миллиарда триста сорок пять миллионов двести сорок две тысячи четыреста тридцать два целых сорок две сотых",
+			wantErr: false,
+		},
+		{
+			name:    "no fractional part",
+			decimal: "100",
+			want:    "сто целых ноль сотых",
+			wantErr: false,
+		},
+		{
+			name:    "one digit fraction",
+			decimal: "50.5",
+			want:    "пятьдесят целых пятьдесят сотых",
+			wantErr: false,
+		},
+		{
+			name:    "zero whole",
+			decimal: "0.99",
+			want:    "ноль целых девяносто девять сотых",
+			wantErr: false,
+		},
+		{
+			name:    "truncate extra decimals",
+			decimal: "1.999",
+			want:    "один целых девяносто девять сотых",
+			wantErr: false,
+		},
+		{
+			name:    "one hundredth",
+			decimal: "5.01",
+			want:    "пять целых одна сотая",
+			wantErr: false,
+		},
+		{
+			name:    "two hundredths",
+			decimal: "10.02",
+			want:    "десять целых две сотых",
+			wantErr: false,
+		},
+		{
+			name:    "invalid whole number",
+			decimal: "abc.45",
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name:    "invalid fraction",
+			decimal: "123.xyz",
+			want:    "",
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got, err := DecimalToWords(tc.decimal)
+			if tc.wantErr {
+				assert.Error(t, err)
+				assert.Empty(t, got)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.want, got)
+			}
+		})
+	}
+}
+
+func TestDecimalValueToWords(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name    string
+		decimal decimal.Decimal
+		want    string
+		wantErr bool
+	}{
+		{
+			name:    "simple decimal from float",
+			decimal: decimal.NewFromFloat(123.45),
+			want:    "сто двадцать три целых сорок пять сотых",
+			wantErr: false,
+		},
+		{
+			name:    "large number from README",
+			decimal: decimal.RequireFromString("6453345242432.42"),
+			want:    "шесть триллионов четыреста пятьдесят три миллиарда триста сорок пять миллионов двести сорок две тысячи четыреста тридцать два целых сорок две сотых",
+			wantErr: false,
+		},
+		{
+			name:    "from string",
+			decimal: decimal.RequireFromString("100.00"),
+			want:    "сто целых ноль сотых",
+			wantErr: false,
+		},
+		{
+			name:    "one digit fraction",
+			decimal: decimal.NewFromFloat(50.5),
+			want:    "пятьдесят целых пятьдесят сотых",
+			wantErr: false,
+		},
+		{
+			name:    "zero whole",
+			decimal: decimal.NewFromFloat(0.99),
+			want:    "ноль целых девяносто девять сотых",
+			wantErr: false,
+		},
+		{
+			name:    "truncate extra decimals",
+			decimal: decimal.RequireFromString("1.999"),
+			want:    "один целых девяносто девять сотых",
+			wantErr: false,
+		},
+		{
+			name:    "truncate not round",
+			decimal: decimal.RequireFromString("1.995"),
+			want:    "один целых девяносто девять сотых",
+			wantErr: false,
+		},
+		{
+			name:    "one hundredth",
+			decimal: decimal.NewFromFloat(5.01),
+			want:    "пять целых одна сотая",
+			wantErr: false,
+		},
+		{
+			name:    "two hundredths",
+			decimal: decimal.NewFromFloat(10.02),
+			want:    "десять целых две сотых",
+			wantErr: false,
+		},
+		{
+			name:    "negative number",
+			decimal: decimal.NewFromFloat(-42.15),
+			want:    "минус сорок два целых пятнадцать сотых",
+			wantErr: false,
+		},
+		{
+			name:    "very precise number rounded",
+			decimal: decimal.RequireFromString("3.141592653589793"),
+			want:    "три целых четырнадцать сотых",
+			wantErr: false,
+		},
+		{
+			name:    "zero",
+			decimal: decimal.Zero,
+			want:    "ноль целых ноль сотых",
+			wantErr: false,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got, err := DecimalValueToWords(tc.decimal)
+			if tc.wantErr {
+				assert.Error(t, err)
+				assert.Empty(t, got)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.want, got)
+			}
 		})
 	}
 }
