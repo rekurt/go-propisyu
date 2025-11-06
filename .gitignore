@@ -1,0 +1,21 @@
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Build artifacts
+bin/
+dist/
+coverage.out
+AGENTS.md
+# Go module/workspace
+vendor/
+go.work
+go.work.sum
+
+# Editor settings
+.idea/
+.vscode/

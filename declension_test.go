@@ -1,0 +1,204 @@
+package propisyu
+
+import (
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+type declineCase struct {
+	description string
+	forms       [3]string
+	num         int
+}
+
+const (
+	formOneIdx = iota
+	formTwoIdx
+	formFiveIdx
+)
+
+func (c declineCase) expected() string {
+	switch {
+	case c.num%100 >= 11 && c.num%100 <= 19:
+		return c.forms[formFiveIdx]
+	case c.num%10 == 1:
+		return c.forms[formOneIdx]
+	case c.num%10 >= 2 && c.num%10 <= 4:
+		return c.forms[formTwoIdx]
+	default:
+		return c.forms[formFiveIdx]
+	}
+}
+
+func TestIntToWordsBasic(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name string
+		want string
+		num  int
+	}{
+		{name: "zero", num: 0, want: "ноль"},
+		{name: "single digit", num: 7, want: "семь"},
+		{name: "teens exact", num: 15, want: "пятнадцать"},
+		{name: "tens exact", num: 40, want: "сорок"},
+		{name: "two digits", num: 42, want: "сорок два"},
+		{name: "hundreds", num: 305, want: "триста пять"},
+		{name: "hundreds with tens", num: 512, want: "пятьсот двенадцать"},
+		{name: "thousand boundary", num: 1000, want: "одна тысяча"},
+		{name: "thousand with remainder", num: 2001, want: "две тысячи один"},
+		{name: "complex", num: 987654, want: "девятьсот восемьдесят семь тысяч шестьсот пятьдесят четыре"},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tc.want, IntToWords(tc.num))
+		})
+	}
+}
+
+func TestIntToWordsLargeNumbers(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name string
+		want string
+		num  int
+	}{
+		{
+			name: "one million",
+			num:  1_000_000,
+			want: "один миллион",
+		},
+		{
+			name: "multi million",
+			num:  21_304_015,
+			want: "двадцать один миллион триста четыре тысячи пятнадцать",
+		},
+		{
+			name: "one billion",
+			num:  1_000_000_000,
+			want: "один миллиард",
+		},
+		{
+			name: "max int32",
+			num:  2_147_483_647,
+			want: "два миллиарда сто сорок семь миллионов четыреста восемьдесят три тысячи шестьсот сорок семь",
+		},
+		{
+			name: "trillion scale",
+			num:  6_453_345_242_432,
+			want: "шесть триллионов четыреста пятьдесят три миллиарда триста сорок пять миллионов двести сорок две тысячи четыреста тридцать два",
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tc.want, IntToWords(tc.num))
+		})
+	}
+}
+
+func TestIntToWordsNegativeAndSpacing(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name string
+		want string
+		num  int
+	}{
+		{name: "negative", num: -512, want: "минус пятьсот двенадцать"},
+		{name: "teens under thousand", num: 1_115, want: "одна тысяча сто пятнадцать"},
+		{name: "feminine thousand one", num: 11_001, want: "одиннадцать тысяч один"},
+		{name: "feminine thousand two", num: 22_002, want: "двадцать две тысячи два"},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := IntToWords(tc.num)
+			assert.Equal(t, tc.want, got)
+			assert.NotContains(t, got, "  ", "result should not contain double spaces")
+			assert.False(t, strings.HasSuffix(got, " "), "result should not end with a space")
+		})
+	}
+}
+
+func TestIntToWordsGender(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		want   string
+		num    int
+		gender Gender
+	}{
+		{name: "masculine default", want: "сорок два", num: 42, gender: GenderMasculine},
+		{name: "feminine override", want: "сорок две", num: 42, gender: GenderFeminine},
+		{name: "neuter override", want: "одно", num: 1, gender: GenderNeuter},
+		{name: "invalid fallback", want: "пять", num: 5, gender: Gender(99)},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tt.want, IntToWordsGender(tt.num, tt.gender))
+		})
+	}
+}
+
+func TestDeclineCommonCurrencies(t *testing.T) {
+	t.Parallel()
+
+	cases := []declineCase{
+		{description: "singular", forms: [3]string{"рубль", "рубля", "рублей"}, num: 1},
+		{description: "few", forms: [3]string{"рубль", "рубля", "рублей"}, num: 2},
+		{description: "many", forms: [3]string{"рубль", "рубля", "рублей"}, num: 5},
+		{description: "teens override", forms: [3]string{"рубль", "рубля", "рублей"}, num: 11},
+		{description: "ends with one", forms: [3]string{"рубль", "рубля", "рублей"}, num: 21},
+		{description: "ends with four", forms: [3]string{"рубль", "рубля", "рублей"}, num: 104},
+		{description: "teens override multi hundred", forms: [3]string{"доллар", "доллара", "долларов"}, num: 111},
+		{description: "invariant plural", forms: [3]string{"евро", "евро", "евро"}, num: 1234},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.description, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tc.expected(), Decline(tc.num, tc.forms[formOneIdx], tc.forms[formTwoIdx], tc.forms[formFiveIdx]))
+		})
+	}
+}
+
+func TestGetDeclensionEdgeCases(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name string
+		want string
+		num  int
+	}{
+		{name: "zero uses five form", num: 0, want: "товаров"},
+		{name: "ending with 3", num: 93, want: "товара"},
+		{name: "teens upper bound", num: 219, want: "товаров"},
+		{name: "teens lower bound", num: 111, want: "товаров"},
+		{name: "ends with 2", num: 1002, want: "товара"},
+		{name: "ends with 7", num: 1007, want: "товаров"},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tc.want, getDeclension(tc.num, "товар", "товара", "товаров"))
+		})
+	}
+}

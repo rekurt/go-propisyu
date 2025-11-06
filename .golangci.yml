@@ -1,0 +1,186 @@
+version: "2"
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:
+    - gosec # Проверка безопасности
+    - bodyclose # Закрытие HTTP body
+    - errcheck # Проверка обработки ошибок
+    - err113 # Стандартизация ошибок
+    - errorlint # Правильная работа с errors
+    - govet # Стандартные проверки Go
+    - staticcheck # Статический анализ
+    - revive # Линтер на замену golint
+    - unused # Неиспользуемый код
+    - ineffassign # Неэффективные присваивания
+    - unconvert # Ненужные конвертации
+    - gocyclo # Цикломатическая сложность
+    - gocognit # Когнитивная сложность
+    - dupl # Дублирование кода
+    - funlen # Длина функций
+    - goconst # Повторяющиеся строки
+    - gochecknoglobals # Глобальные переменные
+    - gochecknoinits # Функции init()
+    - prealloc # Предаллокация слайсов
+    - gofmt # Форматирование
+    - goimports # Импорты
+    - misspell # Опечатки
+    - whitespace # Пробелы
+    - lll # Длина строк
+    - nakedret # Голые return
+    - goprintffuncname # Имена printf функций
+    - gocritic # Множество проверок
+    - stylecheck # Стилистика
+    - dogsled # Много пустых переменных
+    - rowserrcheck # SQL rows.Err()
+    - unparam # Неиспользуемые параметры
+    - godox # TODO, FIXME комментарии
+linters-settings:
+  gosec:
+    severity: medium
+    confidence: medium
+    excludes:
+      - G104
+
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+
+  govet:
+    enable-all: true
+    disable:
+      - composites # Разрешить составные литералы без полей
+      - shadow # Слишком строго для теневых переменных
+
+  revive:
+    severity: warning
+    confidence: 0.8
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+        disabled: true # Отключаем для внутренних пакетов
+      - name: if-return
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: package-comments
+        disabled: true
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unused-parameter
+      - name: unreachable-code
+      - name: redefines-builtin-id
+
+  staticcheck:
+    checks:
+      - all
+      - -ST1000 # Комментарии к пакетам (опционально)
+      - -ST1003 # Имена ALL_CAPS (для констант)
+
+  gocritic:
+    disabled-checks:
+      - captLocal # Слишком строго для локальных переменных
+      - commentFormatting # Форматирование комментариев
+      - ifElseChain # if-else цепочки
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+      - experimental
+      - opinionated
+    settings:
+      hugeParam:
+        sizeThreshold: 80
+      rangeValCopy:
+        sizeThreshold: 512
+
+  gocyclo:
+    min-complexity: 15
+
+  gocognit:
+    min-complexity: 20
+
+  dupl:
+    threshold: 100
+
+  funlen:
+    lines: 80
+    statements: 50
+
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+
+  lll:
+    line-length: 140
+    tab-width: 4
+
+  misspell:
+    locale: US
+    ignore-words:
+      - propisyu
+
+  nakedret:
+    max-func-lines: 30
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  exclude-dirs:
+    - vendor
+    - examples
+    - .github
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - dupl
+        - funlen
+        - gochecknoglobals
+        - goconst
+        - gocyclo
+        - gocognit
+        - lll
+
+    - source: "^//go:generate"
+      linters:
+        - lll
+    - path: _test\.go
+      text: "printf-like"
+      linters:
+        - goprintffuncname
+  exclude-use-default: false
+
+output:
+  formats:
+    - format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+  uniq-by-line: true
+  sort-results: true
+  sort-order:
+    - linter
+    - severity
+    - file
+
+severity:
+  default-severity: warning
+  rules:
+    - linters:
+        - gosec
+        - govet
+        - errcheck
+      severity: error
