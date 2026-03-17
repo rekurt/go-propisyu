@@ -1,4 +1,13 @@
-// Package propisyu provides helpers for converting integers to Russian words.
+// Package propisyu provides helpers for converting integers and decimal numbers
+// to Russian words with correct grammatical gender and noun declension.
+//
+// Supported range: integers up to duodecillions (10³⁹), decimals up to 2 decimal places.
+//
+// Quick start:
+//
+//	propisyu.IntToWords(321)                                    // "триста двадцать один"
+//	propisyu.IntToWordsGender(2, propisyu.GenderFeminine)       // "две"
+//	propisyu.Decline(5, "рубль", "рубля", "рублей")            // "рублей"
 package propisyu
 
 import (

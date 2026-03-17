@@ -1,0 +1,14 @@
+version: 2
+
+builds: []  # library, no binary
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+
+release:
+  name_template: "v{{ .Version }}"

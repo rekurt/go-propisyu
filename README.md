@@ -2,6 +2,12 @@
 
 **Русская версия · [English version](README_EN.md)**
 
+[![CI](https://github.com/rekurt/go-propisyu/actions/workflows/ci.yml/badge.svg)](https://github.com/rekurt/go-propisyu/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/rekurt/go-propisyu.svg)](https://pkg.go.dev/github.com/rekurt/go-propisyu)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rekurt/go-propisyu)](https://goreportcard.com/report/github.com/rekurt/go-propisyu)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/rekurt/go-propisyu)](go.mod)
+
 `go-propisyu` — Go-библиотека, которая переводит числа в русские слова и подбирает правильные склонения. Решение подходит для счетов, фискальных чеков, голосовых ассистентов, генерации документов и любых сервисов, где важно грамотно проговаривать суммы и количества.
 
 ## Ключевые особенности
@@ -11,6 +17,16 @@
 - 💬 Функция `Decline` для автоматического склонения существительных
 - 💰 Работа с десятичными числами через строки или `decimal.Decimal`
 - ✅ Нулевые внешние зависимости для базовых функций
+
+## Содержание
+
+- [Установка](#установка)
+- [Быстрый старт](#быстрый-старт)
+- [Примеры использования](#примеры-использования)
+- [API](#api)
+- [Ограничения](#ограничения)
+- [Contributing](#contributing)
+- [Лицензия](#лицензия)
 
 ## Установка
 
@@ -293,10 +309,10 @@ go test -v ./...           # С подробным выводом
 go test -cover ./...       # С покрытием кода
 ```
 
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Лицензия
 
 MIT
-
----
-
-**SEO keywords:** Go Russian number to words, конвертер чисел в слова, Russian declension library, golang number spelling, propisyu Go package, decimal to words, число прописью Go.

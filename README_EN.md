@@ -2,6 +2,12 @@
 
 **English version · [Русская версия](README.md)**
 
+[![CI](https://github.com/rekurt/go-propisyu/actions/workflows/ci.yml/badge.svg)](https://github.com/rekurt/go-propisyu/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/rekurt/go-propisyu.svg)](https://pkg.go.dev/github.com/rekurt/go-propisyu)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rekurt/go-propisyu)](https://goreportcard.com/report/github.com/rekurt/go-propisyu)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/rekurt/go-propisyu)](go.mod)
+
 `go-propisyu` converts integers into Russian words and applies the correct grammatical declensions. The package is ideal for invoices, receipts, voice prompts, document generators, fintech dashboards, and any interface that must spell numbers in fluent Russian.
 
 ## Highlights
@@ -11,6 +17,16 @@
 - 💬 Provides `Decline` to automatically choose noun forms
 - 💰 Works with decimal numbers via strings or `decimal.Decimal`
 - ✅ Zero external dependencies for core functions
+
+## Contents
+
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Usage Examples](#usage-examples)
+- [API](#api)
+- [Limitations](#limitations)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Installation
 
@@ -293,10 +309,10 @@ go test -v ./...           # With verbose output
 go test -cover ./...       # With code coverage
 ```
 
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 MIT
-
----
-
-**SEO keywords:** go-propisyu, Go Russian number to words, Russian number declension, golang number spelling library, Russian currency declension Go, decimal to words, число прописью Go.
