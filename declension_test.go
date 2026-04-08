@@ -291,6 +291,69 @@ func TestDecimalToWords(t *testing.T) {
 	}
 }
 
+func TestDecimalToWordsPrecision(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name      string
+		decimal   string
+		precision int
+		want      string
+		wantErr   bool
+	}{
+		{
+			name:      "tenths",
+			decimal:   "3.5",
+			precision: 1,
+			want:      "три целых пять десятых",
+		},
+		{
+			name:      "hundredths",
+			decimal:   "3.14",
+			precision: 2,
+			want:      "три целых четырнадцать сотых",
+		},
+		{
+			name:      "thousandths",
+			decimal:   "3.145",
+			precision: 3,
+			want:      "три целых сто сорок пять тысячных",
+		},
+		{
+			name:      "one and five tenths",
+			decimal:   "1.5",
+			precision: 1,
+			want:      "один целых пять десятых",
+		},
+		{
+			name:      "invalid precision too low",
+			decimal:   "1.5",
+			precision: 0,
+			wantErr:   true,
+		},
+		{
+			name:      "invalid precision too high",
+			decimal:   "1.5",
+			precision: 10,
+			wantErr:   true,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got, err := DecimalToWordsPrecision(tc.decimal, tc.precision)
+			if tc.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.want, got)
+			}
+		})
+	}
+}
+
 func TestDecimalValueToWords(t *testing.T) {
 	t.Parallel()
 

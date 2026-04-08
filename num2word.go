@@ -230,6 +230,67 @@ func (d *dictionary) triadToWords(n, order int) string {
 	return strings.Join(s, " ")
 }
 
+// fractionUnits maps precision (1-9) to fraction unit names [one, two/five, two/five].
+var fractionUnits = [][3]string{
+	{"десятая", "десятых", "десятых"},                             // 1
+	{"сотая", "сотых", "сотых"},                                   // 2
+	{"тысячная", "тысячных", "тысячных"},                         // 3
+	{"десятитысячная", "десятитысячных", "десятитысячных"},       // 4
+	{"стотысячная", "стотысячных", "стотысячных"},               // 5
+	{"миллионная", "миллионных", "миллионных"},                   // 6
+	{"десятимиллионная", "десятимиллионных", "десятимиллионных"}, // 7
+	{"стомиллионная", "стомиллионных", "стомиллионных"},         // 8
+	{"миллиардная", "миллиардных", "миллиардных"},               // 9
+}
+
+// DecimalToWordsPrecision converts a decimal string with specified precision (1-9).
+// Precision 1 = десятые, 2 = сотые, 3 = тысячные, etc.
+// The fractional part is always in feminine gender.
+//
+//	DecimalToWordsPrecision("3.14", 2)  // "три целых четырнадцать сотых"
+//	DecimalToWordsPrecision("3.5", 1)   // "три целых пять десятых"
+func DecimalToWordsPrecision(decimalStr string, precision int) (string, error) {
+	if precision < 1 || precision > 9 {
+		return "", fmt.Errorf("precision must be between 1 and 9, got %d", precision)
+	}
+
+	parts := strings.SplitN(decimalStr, ".", 2)
+
+	whole, err := strconv.Atoi(parts[0])
+	if err != nil {
+		return "", fmt.Errorf("invalid whole number part: %w", err)
+	}
+
+	fracStr := "0"
+	if len(parts) == 2 {
+		fracStr = parts[1]
+	}
+
+	// Truncate or pad to the specified precision
+	if len(fracStr) > precision {
+		fracStr = fracStr[:precision]
+	}
+	for len(fracStr) < precision {
+		fracStr += "0"
+	}
+
+	fracVal, err := strconv.Atoi(fracStr)
+	if err != nil {
+		return "", fmt.Errorf("invalid fractional part: %w", err)
+	}
+
+	units := fractionUnits[precision-1]
+
+	result := fmt.Sprintf(
+		"%s целых %s %s",
+		IntToWords(whole),
+		IntToWordsGender(fracVal, GenderFeminine),
+		Decline(fracVal, units[0], units[1], units[2]),
+	)
+
+	return result, nil
+}
+
 func clampGender(g Gender) int {
 	switch g {
 	case GenderMasculine, GenderFeminine, GenderNeuter:
