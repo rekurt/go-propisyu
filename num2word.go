@@ -1,13 +1,3 @@
-// Package propisyu provides helpers for converting integers and decimal numbers
-// to Russian words with correct grammatical gender and noun declension.
-//
-// Supported range: integers up to duodecillions (10³⁹), decimals up to 2 decimal places.
-//
-// Quick start:
-//
-//	propisyu.IntToWords(321)                                    // "триста двадцать один"
-//	propisyu.IntToWordsGender(2, propisyu.GenderFeminine)       // "две"
-//	propisyu.Decline(5, "рубль", "рубля", "рублей")            // "рублей"
 package propisyu
 
 import (
@@ -83,10 +73,24 @@ func newDictionary(baseGender Gender) *dictionary {
 	}
 }
 
+// IntToWords converts an integer to its Russian word representation
+// using masculine gender by default.
+//
+//	propisyu.IntToWords(42)   // "сорок два"
+//	propisyu.IntToWords(0)    // "ноль"
+//	propisyu.IntToWords(-5)   // "минус пять"
+//	propisyu.IntToWords(1000) // "одна тысяча"
 func IntToWords(n int) string {
 	return convertIntToWords(n, newDictionary(GenderMasculine))
 }
 
+// IntToWordsGender converts an integer to its Russian word representation
+// with the specified grammatical gender. Gender affects the forms of
+// "один"/"одна"/"одно" and "два"/"две".
+//
+//	propisyu.IntToWordsGender(1, propisyu.GenderMasculine) // "один"
+//	propisyu.IntToWordsGender(1, propisyu.GenderFeminine)  // "одна"
+//	propisyu.IntToWordsGender(1, propisyu.GenderNeuter)    // "одно"
 func IntToWordsGender(n int, gender Gender) string {
 	return convertIntToWords(n, newDictionary(gender))
 }

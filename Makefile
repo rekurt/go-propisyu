@@ -5,7 +5,7 @@ help: ## Показать справку по командам
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
 lint: ## Запустить golangci-lint
-	@command -v golangci-lint >/dev/null 2>&1 || { echo "Installing golangci-lint..."; GOBIN=$$(go env GOPATH)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.62.2; }
+	@command -v golangci-lint >/dev/null 2>&1 || { echo "Installing golangci-lint..."; GOBIN=$$(go env GOPATH)/bin go install github.com/golangci/golangci-lint/cmd/golangci-lint@v2.1.6; }
 	$$(go env GOPATH)/bin/golangci-lint run --fix
 
 secure: ## Запустить gosec

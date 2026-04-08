@@ -1,22 +1,41 @@
-# go-propisyu · Go Library for Russian Number Spelling
+# go-propisyu · Russian Number-to-Words for Go
 
 **English version · [Русская версия](README.md)**
 
 [![CI](https://github.com/rekurt/go-propisyu/actions/workflows/ci.yml/badge.svg)](https://github.com/rekurt/go-propisyu/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/rekurt/go-propisyu.svg)](https://pkg.go.dev/github.com/rekurt/go-propisyu)
 [![Go Report Card](https://goreportcard.com/badge/github.com/rekurt/go-propisyu)](https://goreportcard.com/report/github.com/rekurt/go-propisyu)
+[![codecov](https://codecov.io/gh/rekurt/go-propisyu/branch/master/graph/badge.svg)](https://codecov.io/gh/rekurt/go-propisyu)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/rekurt/go-propisyu)](go.mod)
 
-`go-propisyu` converts integers into Russian words and applies the correct grammatical declensions. The package is ideal for invoices, receipts, voice prompts, document generators, fintech dashboards, and any interface that must spell numbers in fluent Russian.
+`go-propisyu` is a Go library that converts integers and decimals into Russian words with correct grammatical gender and noun declension. Perfect for invoices, fiscal receipts, accounting documents, bank statements, voice assistants (TTS), chatbots, document generation, and any service that needs to spell out numbers in fluent Russian.
+
+```go
+propisyu.IntToWords(42)                              // "сорок два"
+propisyu.Decline(5, "рубль", "рубля", "рублей")      // "рублей"
+propisyu.DecimalToWords("1234.56")                    // "одна тысяча двести тридцать четыре целых пятьдесят шесть сотых"
+```
+
+## Use Cases
+
+| Domain | Example |
+|--------|---------|
+| Fintech & Banking | Amount in words on payment orders and statements |
+| Accounting | Invoice, act, and waybill generation |
+| Fiscal Receipts | POS / OFD — amount in words (Russian 54-FZ) |
+| Voice Assistants | TTS pronunciation of amounts and quantities |
+| Chatbots | Natural-language responses with amounts |
+| Document Generation | Contract, power-of-attorney, and act templates |
 
 ## Highlights
 
-- 🔢 Handles gigantic numbers up to duodecillions (10³⁹)
-- 🧠 Supports masculine, feminine, and neuter genders for correct endings
-- 💬 Provides `Decline` to automatically choose noun forms
-- 💰 Works with decimal numbers via strings or `decimal.Decimal`
-- ✅ Zero external dependencies for core functions
+- Handles numbers up to duodecillions (10³⁹)
+- Supports masculine, feminine, and neuter grammatical genders
+- `Decline` helper for automatic Russian noun declension
+- Decimal support via plain strings or `decimal.Decimal`
+- Zero external dependencies for core functions
+- High test coverage, CI/CD, linter, semantic versioning
 
 ## Contents
 
@@ -24,6 +43,7 @@
 - [Quick Start](#quick-start)
 - [Usage Examples](#usage-examples)
 - [API](#api)
+- [Why go-propisyu](#why-go-propisyu)
 - [Limitations](#limitations)
 - [Contributing](#contributing)
 - [License](#license)
@@ -294,6 +314,14 @@ propisyu.Decline(5, "рубль", "рубля", "рублей")   // "рубле
 propisyu.Decline(11, "рубль", "рубля", "рублей")  // "рублей"
 propisyu.Decline(21, "рубль", "рубля", "рублей")  // "рубль"
 ```
+
+## Why go-propisyu
+
+- **Pure Go** — not a C wrapper; easy to build and deploy anywhere
+- **Correct grammar** — three genders, proper declension for all numeric ranges
+- **Zero deps** — `IntToWords` and `Decline` require no third-party packages
+- **Production-ready** — CI with linter, tests, semantic versioning, goreleaser
+- **Open license** — MIT, free for commercial use
 
 ## Limitations
 
