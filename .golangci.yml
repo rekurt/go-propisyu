@@ -31,7 +31,6 @@ linters:
     - nakedret
     - goprintffuncname
     - gocritic
-    - stylecheck
     - dogsled
     - rowserrcheck
     - unparam
