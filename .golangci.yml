@@ -1,42 +1,41 @@
-version: "2"
 run:
   timeout: 5m
   tests: true
 
 linters:
   enable:
-    - gosec # Проверка безопасности
-    - bodyclose # Закрытие HTTP body
-    - errcheck # Проверка обработки ошибок
-    - err113 # Стандартизация ошибок
-    - errorlint # Правильная работа с errors
-    - govet # Стандартные проверки Go
-    - staticcheck # Статический анализ
-    - revive # Линтер на замену golint
-    - unused # Неиспользуемый код
-    - ineffassign # Неэффективные присваивания
-    - unconvert # Ненужные конвертации
-    - gocyclo # Цикломатическая сложность
-    - gocognit # Когнитивная сложность
-    - dupl # Дублирование кода
-    - funlen # Длина функций
-    - goconst # Повторяющиеся строки
-    - gochecknoglobals # Глобальные переменные
-    - gochecknoinits # Функции init()
-    - prealloc # Предаллокация слайсов
-    - gofmt # Форматирование
-    - goimports # Импорты
-    - misspell # Опечатки
-    - whitespace # Пробелы
-    - lll # Длина строк
-    - nakedret # Голые return
-    - goprintffuncname # Имена printf функций
-    - gocritic # Множество проверок
-    - stylecheck # Стилистика
-    - dogsled # Много пустых переменных
-    - rowserrcheck # SQL rows.Err()
-    - unparam # Неиспользуемые параметры
-    - godox # TODO, FIXME комментарии
+    - gosec
+    - bodyclose
+    - errcheck
+    - errorlint
+    - govet
+    - staticcheck
+    - revive
+    - unused
+    - ineffassign
+    - unconvert
+    - gocyclo
+    - gocognit
+    - dupl
+    - funlen
+    - goconst
+    - gochecknoglobals
+    - gochecknoinits
+    - prealloc
+    - gofmt
+    - goimports
+    - misspell
+    - whitespace
+    - lll
+    - nakedret
+    - goprintffuncname
+    - gocritic
+    - stylecheck
+    - dogsled
+    - rowserrcheck
+    - unparam
+    - godox
+
 linters-settings:
   gosec:
     severity: medium
@@ -51,8 +50,8 @@ linters-settings:
   govet:
     enable-all: true
     disable:
-      - composites # Разрешить составные литералы без полей
-      - shadow # Слишком строго для теневых переменных
+      - composites
+      - shadow
 
   revive:
     severity: warning
@@ -66,7 +65,7 @@ linters-settings:
       - name: error-strings
       - name: error-naming
       - name: exported
-        disabled: true # Отключаем для внутренних пакетов
+        disabled: true
       - name: if-return
       - name: increment-decrement
       - name: var-naming
@@ -88,14 +87,14 @@ linters-settings:
   staticcheck:
     checks:
       - all
-      - -ST1000 # Комментарии к пакетам (опционально)
-      - -ST1003 # Имена ALL_CAPS (для констант)
+      - -ST1000
+      - -ST1003
 
   gocritic:
     disabled-checks:
-      - captLocal # Слишком строго для локальных переменных
-      - commentFormatting # Форматирование комментариев
-      - ifElseChain # if-else цепочки
+      - captLocal
+      - commentFormatting
+      - ifElseChain
     enabled-tags:
       - diagnostic
       - style
@@ -166,9 +165,9 @@ issues:
 
 output:
   formats:
-    colored-line-number:
-      print-issued-lines: true
-      print-linter-name: true
+    - format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
   sort-results: true
   sort-order:
     - linter
