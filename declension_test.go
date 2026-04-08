@@ -297,8 +297,8 @@ func TestDecimalToWordsPrecision(t *testing.T) {
 	cases := []struct {
 		name      string
 		decimal   string
-		precision int
 		want      string
+		precision int
 		wantErr   bool
 	}{
 		{

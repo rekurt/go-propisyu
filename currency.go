@@ -8,45 +8,38 @@ import (
 
 // Currency describes a currency for formatting amounts in words.
 type Currency struct {
-	WholeOne    string // "рубль"
-	WholeTwo    string // "рубля"
-	WholeFive   string // "рублей"
+	WholeOne  string // "рубль"
+	WholeTwo  string // "рубля"
+	WholeFive string // "рублей"
+	FracOne   string // "копейка"
+	FracTwo   string // "копейки"
+	FracFive  string // "копеек"
+
 	WholeGender Gender // GenderMasculine
-	FracOne     string // "копейка"
-	FracTwo     string // "копейки"
-	FracFive    string // "копеек"
 	FracGender  Gender // GenderFeminine
 }
 
-// CurrencyRUB returns a Currency for Russian Ruble.
-func CurrencyRUB() Currency {
-	return Currency{
+//nolint:gochecknoglobals // exported preset Currency values; const not supported for structs
+var (
+	CurrencyRUB = Currency{
 		WholeOne: "рубль", WholeTwo: "рубля", WholeFive: "рублей", WholeGender: GenderMasculine,
 		FracOne: "копейка", FracTwo: "копейки", FracFive: "копеек", FracGender: GenderFeminine,
 	}
-}
-
-// CurrencyUSD returns a Currency for US Dollar.
-func CurrencyUSD() Currency {
-	return Currency{
+	CurrencyUSD = Currency{
 		WholeOne: "доллар", WholeTwo: "доллара", WholeFive: "долларов", WholeGender: GenderMasculine,
 		FracOne: "цент", FracTwo: "цента", FracFive: "центов", FracGender: GenderMasculine,
 	}
-}
-
-// CurrencyEUR returns a Currency for Euro.
-func CurrencyEUR() Currency {
-	return Currency{
+	CurrencyEUR = Currency{
 		WholeOne: "евро", WholeTwo: "евро", WholeFive: "евро", WholeGender: GenderNeuter,
 		FracOne: "цент", FracTwo: "цента", FracFive: "центов", FracGender: GenderMasculine,
 	}
-}
+)
 
 // Money formats an amount as words with currency.
 // whole is the integer part, cents is the fractional part (0-99).
-// Example: Money(1234, 56, CurrencyRUB()) returns
+// Example: Money(1234, 56, &CurrencyRUB) returns
 // "одна тысяча двести тридцать четыре рубля пятьдесят шесть копеек"
-func Money(whole int, cents int, c Currency) string {
+func Money(whole int, cents int, c *Currency) string {
 	wholeWords := IntToWordsGender(whole, c.WholeGender)
 	wholeDecl := Decline(whole, c.WholeOne, c.WholeTwo, c.WholeFive)
 	centsWords := IntToWordsGender(cents, c.FracGender)
@@ -55,7 +48,7 @@ func Money(whole int, cents int, c Currency) string {
 }
 
 // MoneyFromString parses "1234.56" and formats with currency.
-func MoneyFromString(amount string, c Currency) (string, error) {
+func MoneyFromString(amount string, c *Currency) (string, error) {
 	parts := strings.SplitN(amount, ".", 2)
 	whole, err := strconv.Atoi(parts[0])
 	if err != nil {

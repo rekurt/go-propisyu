@@ -11,9 +11,9 @@ func TestOrdinal(t *testing.T) {
 
 	cases := []struct {
 		name   string
+		want   string
 		n      int
 		gender Gender
-		want   string
 	}{
 		{name: "1 masculine", n: 1, gender: GenderMasculine, want: "первый"},
 		{name: "1 feminine", n: 1, gender: GenderFeminine, want: "первая"},
