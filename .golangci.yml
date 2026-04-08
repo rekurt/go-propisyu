@@ -3,10 +3,6 @@ version: "2"
 run:
   timeout: 5m
   tests: true
-  exclude-dirs:
-    - vendor
-    - examples
-    - .github
 
 linters:
   enable:
