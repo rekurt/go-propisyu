@@ -20,21 +20,21 @@ func TestMoney(t *testing.T) {
 			name:  "RUB standard",
 			whole: 1234,
 			cents: 56,
-			cur:   CurrencyRUB,
+			cur:   CurrencyRUB(),
 			want:  "одна тысяча двести тридцать четыре рубля пятьдесят шесть копеек",
 		},
 		{
 			name:  "RUB singular",
 			whole: 1,
 			cents: 1,
-			cur:   CurrencyRUB,
+			cur:   CurrencyRUB(),
 			want:  "один рубль одна копейка",
 		},
 		{
 			name:  "USD zero cents",
 			whole: 5,
 			cents: 0,
-			cur:   CurrencyUSD,
+			cur:   CurrencyUSD(),
 			want:  "пять долларов ноль центов",
 		},
 	}
@@ -62,19 +62,19 @@ func TestMoneyFromString(t *testing.T) {
 		{
 			name:   "RUB from string",
 			amount: "1234.56",
-			cur:    CurrencyRUB,
+			cur:    CurrencyRUB(),
 			want:   "одна тысяча двести тридцать четыре рубля пятьдесят шесть копеек",
 		},
 		{
 			name:   "no fractional part",
 			amount: "100",
-			cur:    CurrencyRUB,
+			cur:    CurrencyRUB(),
 			want:   "сто рублей ноль копеек",
 		},
 		{
 			name:    "invalid amount",
 			amount:  "abc.45",
-			cur:     CurrencyRUB,
+			cur:     CurrencyRUB(),
 			wantErr: true,
 		},
 	}

@@ -18,24 +18,33 @@ type Currency struct {
 	FracGender  Gender // GenderFeminine
 }
 
-var (
-	CurrencyRUB = Currency{
+// CurrencyRUB returns a Currency for Russian Ruble.
+func CurrencyRUB() Currency {
+	return Currency{
 		WholeOne: "рубль", WholeTwo: "рубля", WholeFive: "рублей", WholeGender: GenderMasculine,
 		FracOne: "копейка", FracTwo: "копейки", FracFive: "копеек", FracGender: GenderFeminine,
 	}
-	CurrencyUSD = Currency{
+}
+
+// CurrencyUSD returns a Currency for US Dollar.
+func CurrencyUSD() Currency {
+	return Currency{
 		WholeOne: "доллар", WholeTwo: "доллара", WholeFive: "долларов", WholeGender: GenderMasculine,
 		FracOne: "цент", FracTwo: "цента", FracFive: "центов", FracGender: GenderMasculine,
 	}
-	CurrencyEUR = Currency{
+}
+
+// CurrencyEUR returns a Currency for Euro.
+func CurrencyEUR() Currency {
+	return Currency{
 		WholeOne: "евро", WholeTwo: "евро", WholeFive: "евро", WholeGender: GenderNeuter,
 		FracOne: "цент", FracTwo: "цента", FracFive: "центов", FracGender: GenderMasculine,
 	}
-)
+}
 
 // Money formats an amount as words with currency.
 // whole is the integer part, cents is the fractional part (0-99).
-// Example: Money(1234, 56, CurrencyRUB) returns
+// Example: Money(1234, 56, CurrencyRUB()) returns
 // "одна тысяча двести тридцать четыре рубля пятьдесят шесть копеек"
 func Money(whole int, cents int, c Currency) string {
 	wholeWords := IntToWordsGender(whole, c.WholeGender)
