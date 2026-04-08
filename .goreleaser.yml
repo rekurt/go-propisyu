@@ -1,6 +1,7 @@
 version: 2
 
-builds: []  # library, no binary
+builds:
+  - skip: true
 
 changelog:
   sort: asc
