@@ -3,6 +3,10 @@ version: "2"
 run:
   timeout: 5m
   tests: true
+  exclude-dirs:
+    - vendor
+    - examples
+    - .github
 
 linters:
   enable:
@@ -132,8 +136,6 @@ linters:
 
     misspell:
       locale: US
-      ignore-words:
-        - propisyu
 
     nakedret:
       max-func-lines: 30
@@ -141,28 +143,6 @@ linters:
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
-  exclude-dirs:
-    - vendor
-    - examples
-    - .github
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - dupl
-        - funlen
-        - gochecknoglobals
-        - goconst
-        - gocyclo
-        - gocognit
-        - lll
-
-    - source: "^//go:generate"
-      linters:
-        - lll
-    - path: _test\.go
-      text: "printf-like"
-      linters:
-        - goprintffuncname
 
 output:
   formats:
