@@ -25,8 +25,6 @@ linters:
     - gochecknoglobals
     - gochecknoinits
     - prealloc
-    - gofmt
-    - goimports
     - misspell
     - whitespace
     - lll
@@ -144,6 +142,11 @@ output:
   formats:
     text:
       path: stdout
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
 
 severity:
   default: warning
