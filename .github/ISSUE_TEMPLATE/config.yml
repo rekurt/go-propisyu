@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Go Package Documentation
+    url: https://pkg.go.dev/github.com/rekurt/go-propisyu
+    about: Read the full API documentation on pkg.go.dev
+  - name: Discussions
+    url: https://github.com/rekurt/go-propisyu/discussions
+    about: Ask questions and share ideas

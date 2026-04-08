@@ -1,6 +1,6 @@
 module github.com/rekurt/go-propisyu
 
-go 1.25.1
+go 1.22.0
 
 require (
 	github.com/shopspring/decimal v1.4.0
