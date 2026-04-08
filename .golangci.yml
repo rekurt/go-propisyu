@@ -1,5 +1,3 @@
-version: "2"
-
 run:
   timeout: 5m
   tests: true
@@ -9,7 +7,6 @@ linters:
     - gosec
     - bodyclose
     - errcheck
-    - err113
     - errorlint
     - govet
     - staticcheck
@@ -25,130 +22,161 @@ linters:
     - gochecknoglobals
     - gochecknoinits
     - prealloc
+    - gofmt
+    - goimports
     - misspell
     - whitespace
     - lll
     - nakedret
     - goprintffuncname
     - gocritic
+    - stylecheck
     - dogsled
     - rowserrcheck
     - unparam
     - godox
-  settings:
-    gosec:
-      severity: medium
-      confidence: medium
-      excludes:
-        - G104
 
-    errcheck:
-      check-type-assertions: true
-      check-blank: true
+linters-settings:
+  gosec:
+    severity: medium
+    confidence: medium
+    excludes:
+      - G104
 
-    govet:
-      enable-all: true
-      disable:
-        - composites
-        - shadow
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
 
-    revive:
-      severity: warning
-      confidence: 0.8
-      rules:
-        - name: blank-imports
-        - name: context-as-argument
-        - name: context-keys-type
-        - name: dot-imports
-        - name: error-return
-        - name: error-strings
-        - name: error-naming
-        - name: exported
-          disabled: true
-        - name: if-return
-        - name: increment-decrement
-        - name: var-naming
-        - name: var-declaration
-        - name: package-comments
-          disabled: true
-        - name: range
-        - name: receiver-naming
-        - name: time-naming
-        - name: unexported-return
-        - name: indent-error-flow
-        - name: errorf
-        - name: empty-block
-        - name: superfluous-else
-        - name: unused-parameter
-        - name: unreachable-code
-        - name: redefines-builtin-id
+  govet:
+    enable-all: true
+    disable:
+      - composites
+      - shadow
 
-    staticcheck:
-      checks:
-        - all
-        - -ST1000
-        - -ST1003
+  revive:
+    severity: warning
+    confidence: 0.8
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+        disabled: true
+      - name: if-return
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: package-comments
+        disabled: true
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unused-parameter
+      - name: unreachable-code
+      - name: redefines-builtin-id
 
-    gocritic:
-      disabled-checks:
-        - captLocal
-        - commentFormatting
-        - ifElseChain
-      enabled-tags:
-        - diagnostic
-        - style
-        - performance
-        - experimental
-        - opinionated
-      settings:
-        hugeParam:
-          sizeThreshold: 80
-        rangeValCopy:
-          sizeThreshold: 512
+  staticcheck:
+    checks:
+      - all
+      - -ST1000
+      - -ST1003
 
-    gocyclo:
-      min-complexity: 15
+  gocritic:
+    disabled-checks:
+      - captLocal
+      - commentFormatting
+      - ifElseChain
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+      - experimental
+      - opinionated
+    settings:
+      hugeParam:
+        sizeThreshold: 80
+      rangeValCopy:
+        sizeThreshold: 512
 
-    gocognit:
-      min-complexity: 20
+  gocyclo:
+    min-complexity: 15
 
-    dupl:
-      threshold: 100
+  gocognit:
+    min-complexity: 20
 
-    funlen:
-      lines: 80
-      statements: 50
+  dupl:
+    threshold: 100
 
-    goconst:
-      min-len: 3
-      min-occurrences: 3
+  funlen:
+    lines: 80
+    statements: 50
 
-    lll:
-      line-length: 140
-      tab-width: 4
+  goconst:
+    min-len: 3
+    min-occurrences: 3
 
-    misspell:
-      locale: US
+  lll:
+    line-length: 140
+    tab-width: 4
 
-    nakedret:
-      max-func-lines: 30
+  misspell:
+    locale: US
+    ignore-words:
+      - propisyu
+
+  nakedret:
+    max-func-lines: 30
 
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
+  exclude-dirs:
+    - vendor
+    - examples
+    - .github
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - dupl
+        - funlen
+        - gochecknoglobals
+        - goconst
+        - gocyclo
+        - gocognit
+        - lll
+
+    - source: "^//go:generate"
+      linters:
+        - lll
+    - path: _test\.go
+      text: "printf-like"
+      linters:
+        - goprintffuncname
+  exclude-use-default: false
 
 output:
   formats:
-    text:
-      path: stdout
-
-formatters:
-  enable:
-    - gofmt
-    - goimports
+    - format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+  uniq-by-line: true
+  sort-results: true
+  sort-order:
+    - linter
+    - severity
+    - file
 
 severity:
-  default: warning
+  default-severity: warning
   rules:
     - linters:
         - gosec
