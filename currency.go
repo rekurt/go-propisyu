@@ -37,9 +37,9 @@ var (
 
 // Money formats an amount as words with currency.
 // whole is the integer part, cents is the fractional part (0-99).
-// Example: Money(1234, 56, &CurrencyRUB) returns
+// Example: Money(1234, 56, CurrencyRUB) returns
 // "одна тысяча двести тридцать четыре рубля пятьдесят шесть копеек"
-func Money(whole, cents int, c *Currency) string {
+func Money(whole, cents int, c Currency) string { //nolint:gocritic // hugeParam: preserve public API compatibility
 	wholeWords := IntToWordsGender(whole, c.WholeGender)
 	wholeDecl := Decline(whole, c.WholeOne, c.WholeTwo, c.WholeFive)
 	centsWords := IntToWordsGender(cents, c.FracGender)
@@ -48,7 +48,7 @@ func Money(whole, cents int, c *Currency) string {
 }
 
 // MoneyFromString parses "1234.56" and formats with currency.
-func MoneyFromString(amount string, c *Currency) (string, error) {
+func MoneyFromString(amount string, c Currency) (string, error) { //nolint:gocritic // hugeParam: preserve public API compatibility
 	parts := strings.SplitN(amount, ".", 2)
 	whole, err := strconv.Atoi(parts[0])
 	if err != nil {
