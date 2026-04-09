@@ -7,15 +7,14 @@ import (
 )
 
 // Currency describes a currency for formatting amounts in words.
-type Currency struct {
-	WholeOne  string // "рубль"
-	WholeTwo  string // "рубля"
-	WholeFive string // "рублей"
-	FracOne   string // "копейка"
-	FracTwo   string // "копейки"
-	FracFive  string // "копеек"
-
+type Currency struct { //nolint:govet // fieldalignment: preserve exported field order for API compatibility
+	WholeOne    string // "рубль"
+	WholeTwo    string // "рубля"
+	WholeFive   string // "рублей"
 	WholeGender Gender // GenderMasculine
+	FracOne     string // "копейка"
+	FracTwo     string // "копейки"
+	FracFive    string // "копеек"
 	FracGender  Gender // GenderFeminine
 }
 
