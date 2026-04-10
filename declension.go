@@ -15,6 +15,9 @@ func Decline(n int, one, two, five string) string {
 	return getDeclension(n, one, two, five)
 }
 func getDeclension(n int, one, two, five string) string {
+	if n < 0 {
+		n = -n
+	}
 	n %= 100
 	if n >= 11 && n <= 19 {
 		return five

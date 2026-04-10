@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Grammar: `DecimalToWords`, `DecimalValueToWords`, and `DecimalToWordsPrecision`
+  now use the feminine gender for the whole part, producing grammatically
+  correct Russian forms — e.g. `"одна целая"` / `"две целых"` instead of the
+  previous `"один целых"` / `"два целых"`. This also affects compound numbers
+  such as `21`, `432`, and `6453345242432`, whose last triad is now declined in
+  the feminine gender before `"целая/целых"`.
+- `Decline` (and internal `getDeclension`) now correctly handle negative
+  numbers. Previously, Go's sign-preserving `%` operator caused negative inputs
+  to fall through to the `five` form regardless of the actual last digit — for
+  example `Decline(-1, ...)` returned `five` instead of `one`. The function now
+  takes the absolute value before the modulo.
+
+### BREAKING CHANGES
+
+- Output of `DecimalToWords`, `DecimalValueToWords`, and `DecimalToWordsPrecision`
+  has changed for inputs whose whole part ends in `1` or `2` (excluding teens
+  `11`–`19`). Golden-string tests or snapshots referencing these functions must
+  be updated. Example migrations:
+  - `"один целых девяносто девять сотых"` → `"одна целая девяносто девять сотых"`
+  - `"минус сорок два целых пятнадцать сотых"` → `"минус сорок две целых пятнадцать сотых"`
+  - `"...четыреста тридцать два целых сорок две сотых"` → `"...четыреста тридцать две целых сорок две сотых"`
+- `Decline` now returns different (correct) forms for negative inputs; callers
+  relying on the previous (incorrect) behavior must be updated.
+
 ## [0.3.0] - 2026-04-08
 
 ### Added
