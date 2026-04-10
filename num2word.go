@@ -230,19 +230,6 @@ func (d *dictionary) triadToWords(n, order int) string {
 	return strings.Join(s, " ")
 }
 
-// fractionUnits maps precision (1-9) to fraction unit names [one, two/five, two/five].
-var fractionUnits = [][3]string{
-	{"десятая", "десятых", "десятых"},                             // 1
-	{"сотая", "сотых", "сотых"},                                   // 2
-	{"тысячная", "тысячных", "тысячных"},                         // 3
-	{"десятитысячная", "десятитысячных", "десятитысячных"},       // 4
-	{"стотысячная", "стотысячных", "стотысячных"},               // 5
-	{"миллионная", "миллионных", "миллионных"},                   // 6
-	{"десятимиллионная", "десятимиллионных", "десятимиллионных"}, // 7
-	{"стомиллионная", "стомиллионных", "стомиллионных"},         // 8
-	{"миллиардная", "миллиардных", "миллиардных"},               // 9
-}
-
 // DecimalToWordsPrecision converts a decimal string with specified precision (1-9).
 // Precision 1 = десятые, 2 = сотые, 3 = тысячные, etc.
 // The fractional part is always in feminine gender.
@@ -252,6 +239,18 @@ var fractionUnits = [][3]string{
 func DecimalToWordsPrecision(decimalStr string, precision int) (string, error) {
 	if precision < 1 || precision > 9 {
 		return "", fmt.Errorf("precision must be between 1 and 9, got %d", precision)
+	}
+
+	fractionUnits := [][3]string{
+		{"десятая", "десятых", "десятых"},                            // 1
+		{"сотая", "сотых", "сотых"},                                  // 2
+		{"тысячная", "тысячных", "тысячных"},                         // 3
+		{"десятитысячная", "десятитысячных", "десятитысячных"},       // 4
+		{"стотысячная", "стотысячных", "стотысячных"},                // 5
+		{"миллионная", "миллионных", "миллионных"},                   // 6
+		{"десятимиллионная", "десятимиллионных", "десятимиллионных"}, // 7
+		{"стомиллионная", "стомиллионных", "стомиллионных"},          // 8
+		{"миллиардная", "миллиардных", "миллиардных"},                // 9
 	}
 
 	parts := strings.SplitN(decimalStr, ".", 2)

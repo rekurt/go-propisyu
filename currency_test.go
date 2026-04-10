@@ -11,10 +11,10 @@ func TestMoney(t *testing.T) {
 
 	cases := []struct {
 		name  string
+		want  string
+		cur   Currency
 		whole int
 		cents int
-		cur   Currency
-		want  string
 	}{
 		{
 			name:  "RUB standard",
@@ -55,8 +55,8 @@ func TestMoneyFromString(t *testing.T) {
 	cases := []struct {
 		name    string
 		amount  string
-		cur     Currency
 		want    string
+		cur     Currency
 		wantErr bool
 	}{
 		{
