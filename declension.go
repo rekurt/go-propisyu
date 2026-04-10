@@ -15,11 +15,19 @@ func Decline(n int, one, two, five string) string {
 	return getDeclension(n, one, two, five)
 }
 func getDeclension(n int, one, two, five string) string {
-	n %= 100
-	if n >= 11 && n <= 19 {
+	var nAbs uint64
+	if n < 0 {
+		nAbs = uint64(-(n + 1))
+		nAbs++
+	} else {
+		nAbs = uint64(n)
+	}
+
+	nMod100 := int(nAbs % 100)
+	if nMod100 >= 11 && nMod100 <= 19 {
 		return five
 	}
-	switch n % 10 {
+	switch nMod100 % 10 {
 	case 1:
 		return one
 	case 2, 3, 4:

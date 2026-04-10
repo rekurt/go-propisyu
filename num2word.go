@@ -101,6 +101,9 @@ func IntToWordsGender(n int, gender Gender) string {
 // "сто двадцать три целых сорок пять сотых".
 // Only the first two decimal places are used; additional digits are truncated.
 func DecimalToWords(decimalStr string) (string, error) {
+	trimmed := strings.TrimSpace(decimalStr)
+	isNegative := strings.HasPrefix(trimmed, "-")
+
 	parts := strings.SplitN(decimalStr, ".", 2)
 
 	whole, err := strconv.Atoi(parts[0])
@@ -130,6 +133,10 @@ func DecimalToWords(decimalStr string) (string, error) {
 		IntToWordsGender(hundredths, GenderFeminine),
 		Decline(hundredths, "сотая", "сотых", "сотых"),
 	)
+
+	if isNegative && whole == 0 && hundredths > 0 {
+		result = "минус " + result
+	}
 
 	return result, nil
 }
@@ -166,14 +173,28 @@ func convertIntToWords(n int, dict *dictionary) string {
 	}
 
 	if n < 0 {
+		minInt := -int(^uint(0)>>1) - 1
+		if n == minInt {
+			nAbs := uint64(-(n + 1))
+			nAbs++
+			return "минус " + convertPositiveUint64ToWords(nAbs, dict)
+		}
 		return "минус " + convertIntToWords(-n, dict)
+	}
+
+	return convertPositiveUint64ToWords(uint64(n), dict)
+}
+
+func convertPositiveUint64ToWords(n uint64, dict *dictionary) string {
+	if n == 0 {
+		return "ноль"
 	}
 
 	var parts []string
 	order := 0
 
 	for n > 0 {
-		triad := n % 1000
+		triad := int(n % 1000)
 		n /= 1000
 
 		if triad != 0 {
