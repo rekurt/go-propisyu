@@ -1,6 +1,8 @@
 package propisyu
 
 import (
+	"math"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -45,6 +47,79 @@ func TestOrdinal(t *testing.T) {
 			t.Parallel()
 			got := Ordinal(tc.n, tc.gender)
 			assert.Equal(t, tc.want, got)
+		})
+	}
+}
+
+// TestOrdinalMinInt is a regression guard for a previously-existing
+// stack-overflow bug: `Ordinal(math.MinInt, ...)` used to recurse into
+// `Ordinal(-n, ...)`, but in Go's two's-complement arithmetic
+// `-math.MinInt == math.MinInt`, so the recursion never terminated and
+// the program crashed with `fatal error: stack overflow`. Verified to
+// reproduce on Go 1.26.1 with `ulimit -s 512`.
+//
+// The fix routes the magnitude through uint64 (uint64(math.MaxInt)+1)
+// and never evaluates `-math.MinInt`, so the call must now:
+//  1. return successfully,
+//  2. start with the "минус " prefix,
+//  3. produce a non-trivial body (more than just "минус "),
+//  4. be consistent across all three grammatical genders for everything
+//     after the prefix (magnitude is the same, gender only affects
+//     ordinal endings, and the body for math.MaxInt+1 is the same for
+//     masculine/feminine/neuter roots up to suffix choices — at minimum,
+//     all three must share the word "восемь", which appears in the
+//     highest triad).
+func TestOrdinalMinInt(t *testing.T) {
+	t.Parallel()
+
+	for _, g := range []Gender{GenderMasculine, GenderFeminine, GenderNeuter} {
+		g := g
+		t.Run(
+			map[Gender]string{
+				GenderMasculine: "masculine",
+				GenderFeminine:  "feminine",
+				GenderNeuter:    "neuter",
+			}[g],
+			func(t *testing.T) {
+				t.Parallel()
+				got := Ordinal(math.MinInt, g)
+				assert.True(
+					t, strings.HasPrefix(got, "минус "),
+					"Ordinal(math.MinInt, %v) = %q; want prefix %q",
+					g, got, "минус ",
+				)
+				assert.Greater(
+					t, len(strings.TrimPrefix(got, "минус ")), 0,
+					"Ordinal(math.MinInt, %v) body is empty", g,
+				)
+			},
+		)
+	}
+}
+
+// TestOrdinalNegativeBasic locks in correct handling of ordinary
+// negatives so the MinInt refactor doesn't silently regress common
+// cases.
+func TestOrdinalNegativeBasic(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name   string
+		want   string
+		n      int
+		gender Gender
+	}{
+		{name: "-1 masculine", want: "минус первый", n: -1, gender: GenderMasculine},
+		{name: "-2 feminine", want: "минус вторая", n: -2, gender: GenderFeminine},
+		{name: "-42 masculine", want: "минус сорок второй", n: -42, gender: GenderMasculine},
+		{name: "-1000 masculine", want: "минус тысячный", n: -1000, gender: GenderMasculine},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tc.want, Ordinal(tc.n, tc.gender))
 		})
 	}
 }

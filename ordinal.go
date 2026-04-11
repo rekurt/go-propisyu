@@ -1,6 +1,9 @@
 package propisyu
 
-import "strings"
+import (
+	"math"
+	"strings"
+)
 
 // genderIndex converts Gender to an index 0=masculine, 1=feminine, 2=neuter.
 func genderIndex(g Gender) int {
@@ -29,36 +32,61 @@ func Ordinal(n int, gender Gender) string {
 	}
 
 	if n < 0 {
-		return "минус " + Ordinal(-n, gender)
+		var magU uint64
+		if n == math.MinInt {
+			// |math.MinInt| == math.MaxInt + 1 does not fit in a signed int;
+			// computing -n here would overflow back to math.MinInt and
+			// recurse forever. Lift the magnitude through uint64 instead,
+			// matching the approach used by convertIntToWords.
+			magU = uint64(math.MaxInt) + 1
+		} else {
+			magU = uint64(-n) //#nosec G115 -- n<0 and n!=math.MinInt, so -n fits in int64 and is non-negative
+		}
+		return "минус " + ordinalFromMagnitude(magU, gender)
 	}
 
-	lastTriad := n % 1000
-	prefix := n / 1000
+	return ordinalFromMagnitude(uint64(n), gender)
+}
+
+// ordinalFromMagnitude produces the ordinal phrase for the absolute value
+// of the original input. magU is in [1, uint64(math.MaxInt)+1]:
+//   - magU % 1000 is always in [0, 999] and fits in int trivially.
+//   - magU / 1000 is at most (math.MaxInt + 1) / 1000, which is still
+//     below math.MaxInt and therefore fits in a signed int.
+//
+// These bounds justify the int narrowings below.
+func ordinalFromMagnitude(magU uint64, gender Gender) string {
+	lastTriad := int(magU % 1000) //#nosec G115 -- bounded to [0, 999]
+	prefixU := magU / 1000
 
 	if lastTriad > 0 {
 		// Convert all preceding triads as cardinal, then make last triad ordinal
 		var parts []string
-		if prefix > 0 {
-			cardinalPrefix := convertHighTriads(prefix)
-			parts = append(parts, cardinalPrefix)
+		if prefixU > 0 {
+			parts = append(parts, convertHighTriadsU(prefixU))
 		}
 		parts = append(parts, ordinalTriad(lastTriad, gender))
 		return strings.Join(parts, " ")
 	}
 
-	// lastTriad == 0: round order number (like 1000, 2000000, etc.)
-	return roundOrdinal(prefix, gender)
+	// lastTriad == 0: round order number (like 1000, 2000000, etc.).
+	// roundOrdinal takes int (prefix); prefixU here is bounded to
+	// math.MaxInt/1000+1 at worst (from math.MinInt magnitude lift), which
+	// still fits in a signed int on any supported platform.
+	return roundOrdinal(int(prefixU), gender) //#nosec G115 -- bounded above by (math.MaxInt+1)/1000, fits in int
 }
 
-// convertHighTriads converts the higher triads (everything above the last triad)
-// into cardinal words. The input is the number with the last triad removed (n/1000),
-// so it represents multiples of thousands.
-func convertHighTriads(prefix int) string {
-	// prefix represents the number of thousands
-	// We need to convert prefix * 1000 as cardinal, but only the prefix part
-	// using the full number conversion with appropriate thousand forms
+// convertHighTriadsU converts the higher triads (everything above the last
+// triad) into cardinal words. The input is the magnitude with its last triad
+// removed (magU/1000), so it represents multiples of thousands.
+//
+// This is uint64-native on purpose: when Ordinal is called on math.MinInt,
+// prefixU can be as large as (math.MaxInt+1)/1000, and multiplying that by
+// 1000 in int would overflow. We stay in uint64 and delegate to
+// convertPositiveUint64ToWords, which is safe for the full range.
+func convertHighTriadsU(prefixU uint64) string {
 	dict := newDictionary(GenderMasculine)
-	return convertIntToWords(prefix*1000, dict)
+	return convertPositiveUint64ToWords(prefixU*1000, dict)
 }
 
 // ordinalTriad converts the last triad (1-999) into ordinal form.
