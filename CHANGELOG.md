@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-11
+
+### Added
+
+- `Ordinal(n int, gender Gender) string` — Russian ordinal numbers with full
+  support for all three grammatical genders (`первый / первая / первое`),
+  compound forms (`двадцать первый`, `сорок второй`), and round numbers
+  (`тысячный`, `сороковой`, `миллионный`).
+- `Money(whole, cents int, c Currency) string` and
+  `MoneyFromString(amount string, c Currency) (string, error)` — one-call
+  currency formatting with declension and gender handled end-to-end.
+- `type Currency` with the fields `WholeOne/Two/Five`, `WholeGender`,
+  `FracOne/Two/Five`, `FracGender`, plus the exported presets
+  `CurrencyRUB`, `CurrencyUSD`, and `CurrencyEUR`.
+- `DecimalToWordsPrecision(s string, precision int) (string, error)` —
+  decimal-to-words with arbitrary fractional precision from 1 to 9 digits
+  (десятых → миллиардных).
+- README (RU + EN): full rewrite with hero snippet, unified API section,
+  and four realistic usage scenarios. RU ↔ EN are now strict structural
+  mirrors (same 8 `##` headers, same Go snippets).
+
 ### Fixed
 
 - Grammar: `DecimalToWords`, `DecimalValueToWords`, and `DecimalToWordsPrecision`
