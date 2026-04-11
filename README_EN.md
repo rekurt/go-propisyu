@@ -7,46 +7,61 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/rekurt/go-propisyu)](https://goreportcard.com/report/github.com/rekurt/go-propisyu)
 [![codecov](https://codecov.io/gh/rekurt/go-propisyu/branch/master/graph/badge.svg)](https://codecov.io/gh/rekurt/go-propisyu)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Go Version](https://img.shields.io/github/go-mod/go-version/rekurt/go-propisyu)](go.mod)
 
-`go-propisyu` is a Go library that converts integers and decimals into Russian words with correct grammatical gender and noun declension. Perfect for invoices, fiscal receipts, accounting documents, bank statements, voice assistants (TTS), chatbots, document generation, and any service that needs to spell out numbers in fluent Russian.
+One library that covers **everything** about spelling Russian numbers:
+amounts with currency, decimals of arbitrary precision, ordinal numbers
+in all three grammatical genders, and manual declension for any noun.
+One line of Go instead of a mountain of hand-written conditions — ready
+for invoices, fiscal receipts, financial documents, 1C integrations,
+and voice assistants.
 
 ```go
-propisyu.IntToWords(42)                              // "сорок два"
-propisyu.Decline(5, "рубль", "рубля", "рублей")      // "рублей"
-propisyu.DecimalToWords("1234.56")                    // "одна тысяча двести тридцать четыре целых пятьдесят шесть сотых"
+propisyu.Money(1234, 56, propisyu.CurrencyRUB)
+// одна тысяча двести тридцать четыре рубля пятьдесят шесть копеек
+
+propisyu.Ordinal(1, propisyu.GenderFeminine)
+// первая
+
+propisyu.DecimalToWordsPrecision("3.141", 3)
+// три целых сто сорок одна тысячная
+
+propisyu.Decline(5, "заказ", "заказа", "заказов")
+// заказов
 ```
+
+## Features
+
+- **Full Go `int` range** — from `math.MinInt` to `math.MaxInt`, up to
+  duodecillions (10³⁹). Edge values (including `MinInt`) do not crash
+  `-n`; the library safely lifts the magnitude through `uint64`.
+- **Three grammatical genders** — `GenderMasculine`, `GenderFeminine`,
+  `GenderNeuter` — applied to both cardinals and ordinals.
+- **Ordinal numbers** — `Ordinal(n, gender)` produces "первый / первая /
+  первое", correctly handles compound forms ("сорок второй"), round
+  numbers ("тысячный", "сороковой", "миллионный"), and all three genders.
+- **Decimals with arbitrary precision** — `DecimalToWordsPrecision`
+  supports 1–9 fractional digits (tenths → billionths).
+  `DecimalValueToWords` accepts `shopspring/decimal` directly.
+- **Ready-made currencies** — `Money` + presets `CurrencyRUB`,
+  `CurrencyUSD`, `CurrencyEUR`. The pair `(1234, 56)` becomes "одна
+  тысяча двести тридцать четыре рубля пятьдесят шесть копеек" in one
+  call.
+- **Your own nouns via `Decline`** — correct Russian forms for any word,
+  with proper handling of 11–14, 21, and negative numbers.
+- **Zero external deps in the core** — `shopspring/decimal` is only
+  needed if you use `DecimalValueToWords` yourself. CI, linter, tests,
+  semantic versioning, release via goreleaser.
 
 ## Use Cases
 
 | Domain | Example |
-|--------|---------|
+|---|---|
 | Fintech & Banking | Amount in words on payment orders and statements |
-| Accounting | Invoice, act, and waybill generation |
+| Accounting | Invoices, acts, and waybills |
 | Fiscal Receipts | POS / OFD — amount in words (Russian 54-FZ) |
 | Voice Assistants | TTS pronunciation of amounts and quantities |
 | Chatbots | Natural-language responses with amounts |
-| Document Generation | Contract, power-of-attorney, and act templates |
-
-## Highlights
-
-- Handles numbers up to duodecillions (10³⁹)
-- Supports masculine, feminine, and neuter grammatical genders
-- `Decline` helper for automatic Russian noun declension
-- Decimal support via plain strings or `decimal.Decimal`
-- Zero external dependencies for core functions
-- High test coverage, CI/CD, linter, semantic versioning
-
-## Contents
-
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Usage Examples](#usage-examples)
-- [API](#api)
-- [Why go-propisyu](#why-go-propisyu)
-- [Limitations](#limitations)
-- [Contributing](#contributing)
-- [License](#license)
+| Document Generation | Contracts, powers of attorney, acts |
 
 ## Installation
 
@@ -54,293 +69,197 @@ propisyu.DecimalToWords("1234.56")                    // "одна тысяча 
 go get github.com/rekurt/go-propisyu
 ```
 
-For `decimal.Decimal` support:
+`shopspring/decimal` is only needed for `DecimalValueToWords`:
+
 ```bash
 go get github.com/shopspring/decimal
 ```
 
-## Public Functions
+## Usage
 
-| Function | Description |
-|----------|-------------|
-| `IntToWords(n int) string` | Converts an integer to words (masculine gender) |
-| `IntToWordsGender(n int, gender Gender) string` | Converts an integer to words with specified gender |
-| `DecimalToWords(decimalStr string) (string, error)` | Converts a decimal number from string to words |
-| `DecimalValueToWords(d decimal.Decimal) (string, error)` | Converts a `decimal.Decimal` value to words |
-| `Decline(n int, one, two, five string) string` | Chooses the correct noun declension form |
-
-### Gender Constants
+### Amount in Words for an Invoice
 
 ```go
-const (
-    GenderMasculine Gender = 1  // Masculine: "один", "два"
-    GenderFeminine  Gender = 2  // Feminine: "одна", "две"
-    GenderNeuter    Gender = 3  // Neuter: "одно", "два"
-)
+res, _ := propisyu.MoneyFromString("1234.56", propisyu.CurrencyRUB)
+fmt.Println(res)
+// одна тысяча двести тридцать четыре рубля пятьдесят шесть копеек
+
+fmt.Println(propisyu.Money(1, 1, propisyu.CurrencyRUB))
+// один рубль одна копейка
+
+fmt.Println(propisyu.Money(100, 99, propisyu.CurrencyEUR))
+// сто евро девяносто девять центов
 ```
 
-### Errors
+`Money` picks the correct gender and declension for both the whole and
+fractional parts — you never have to juggle "рубль / рубля / рублей" by
+hand.
 
-- `ErrNumberTooLarge` - number is too large to convert (doesn't fit in `int`)
-
-## Quick Start
-
-### Integer Numbers
+### Decimals with More Than Two Digits
 
 ```go
-package main
+res, _ := propisyu.DecimalToWordsPrecision("3.14159", 5)
+fmt.Println(res)
+// три целых четырнадцать тысяч сто пятьдесят девять стотысячных
 
-import (
-	"fmt"
-
-	"github.com/rekurt/go-propisyu"
-)
-
-func main() {
-	// Basic conversion (masculine gender by default)
-	fmt.Println(propisyu.IntToWords(321))
-	// триста двадцать один
-
-	// Conversion with specified gender
-	fmt.Println(propisyu.IntToWordsGender(2, propisyu.GenderFeminine))
-	// две
-
-	fmt.Println(propisyu.IntToWordsGender(2, propisyu.GenderMasculine))
-	// два
-
-	// Automatic noun declension
-	fmt.Println(propisyu.Decline(1, "рубль", "рубля", "рублей"))   // рубль
-	fmt.Println(propisyu.Decline(2, "рубль", "рубля", "рублей"))   // рубля
-	fmt.Println(propisyu.Decline(5, "рубль", "рубля", "рублей"))   // рублей
-	fmt.Println(propisyu.Decline(21, "рубль", "рубля", "рублей"))  // рубль
-}
+res, _ = propisyu.DecimalToWordsPrecision("3.5", 1)
+fmt.Println(res)
+// три целых пять десятых
 ```
 
-### Decimal Numbers
+The `precision` parameter is the number of fractional digits (1–9) and
+selects how the fractional part is declined: tenths (десятых), hundredths
+(сотых), thousandths (тысячных), ten-thousandths, hundred-thousandths,
+millionths, ten-millionths, hundred-millionths, or billionths.
 
-#### Option 1: Using String
+### Ordinal Numbers for Documents
 
 ```go
-package main
+fmt.Println(propisyu.Ordinal(1, propisyu.GenderMasculine))     // первый
+fmt.Println(propisyu.Ordinal(1, propisyu.GenderFeminine))      // первая
+fmt.Println(propisyu.Ordinal(1, propisyu.GenderNeuter))        // первое
 
-import (
-	"fmt"
-	"log"
-
-	"github.com/rekurt/go-propisyu"
-)
-
-func main() {
-	result, err := propisyu.DecimalToWords("123.45")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(result)
-	// сто двадцать три целых сорок пять сотых
-}
+fmt.Println(propisyu.Ordinal(42, propisyu.GenderMasculine))    // сорок второй
+fmt.Println(propisyu.Ordinal(1000, propisyu.GenderFeminine))   // тысячная
+fmt.Println(propisyu.Ordinal(40, propisyu.GenderMasculine))    // сороковой
 ```
 
-#### Option 2: Using decimal.Decimal
+Works for both round numbers ("тысячный", "миллионный") and compound
+forms ("сорок второй", "двадцать первый").
+
+### Custom Declension via `Decline`
 
 ```go
-package main
-
-import (
-	"fmt"
-	"log"
-
-	"github.com/rekurt/go-propisyu"
-	"github.com/shopspring/decimal"
-)
-
-func main() {
-	d := decimal.NewFromFloat(123.45)
-	result, err := propisyu.DecimalValueToWords(d)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(result)
-	// сто двадцать три целых сорок пять сотых
-}
+fmt.Println(propisyu.Decline(5,  "товар", "товара", "товаров")) // товаров
+fmt.Println(propisyu.Decline(5,  "день",  "дня",    "дней"))    // дней
+fmt.Println(propisyu.Decline(21, "день",  "дня",    "дней"))    // день
+fmt.Println(propisyu.Decline(11, "рубль", "рубля",  "рублей"))  // рублей
 ```
 
-## Usage Examples
-
-### Amount in Words for Receipt
-
-```go
-package main
-
-import (
-	"fmt"
-
-	"github.com/rekurt/go-propisyu"
-)
-
-func main() {
-	amount := 1234
-	rubles := propisyu.IntToWords(amount)
-	rublesDecl := propisyu.Decline(amount, "рубль", "рубля", "рублей")
-
-	fmt.Printf("%s %s 00 копеек", rubles, rublesDecl)
-	// одна тысяча двести тридцать четыре рубля 00 копеек
-}
-```
-
-### Large Numbers
-
-```go
-package main
-
-import (
-	"fmt"
-	"log"
-
-	"github.com/rekurt/go-propisyu"
-)
-
-func main() {
-	result, err := propisyu.DecimalToWords("6453345242432.42")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(result)
-	// шесть триллионов четыреста пятьдесят три миллиарда
-	// триста сорок пять миллионов двести сорок две тысячи четыреста тридцать два
-	// целых сорок две сотых
-}
-```
-
-### Declension with Different Nouns
-
-```go
-package main
-
-import (
-	"fmt"
-
-	"github.com/rekurt/go-propisyu"
-)
-
-func main() {
-	count := 5
-
-	// Currencies
-	fmt.Println(count, propisyu.Decline(count, "доллар", "доллара", "долларов"))
-	// 5 долларов
-
-	// Units of measurement
-	fmt.Println(count, propisyu.Decline(count, "метр", "метра", "метров"))
-	// 5 метров
-
-	// Items
-	fmt.Println(count, propisyu.Decline(count, "товар", "товара", "товаров"))
-	// 5 товаров
-
-	// For 21
-	count = 21
-	fmt.Println(count, propisyu.Decline(count, "день", "дня", "дней"))
-	// 21 день
-}
-```
+The "1 / 2–4 / 5–20" rule with the 11–14 and negative-number exceptions
+is built in — just pass your noun in three forms and get the correct
+one back.
 
 ## API
 
-### Integer Functions
+### Integers
 
-#### `IntToWords(n int) string`
-Converts an integer to words (masculine gender by default).
-
-```go
-propisyu.IntToWords(42)    // "сорок два"
-propisyu.IntToWords(1000)  // "одна тысяча"
-```
-
-#### `IntToWordsGender(n int, gender Gender) string`
-Converts an integer to words with specified gender.
-
-Available genders:
-- `GenderMasculine` (1) - masculine
-- `GenderFeminine` (2) - feminine
-- `GenderNeuter` (3) - neuter
+| Function | Description |
+|---|---|
+| `IntToWords(n int) string` | Integer to words, masculine gender by default |
+| `IntToWordsGender(n int, gender Gender) string` | Same with an explicit gender |
 
 ```go
-propisyu.IntToWordsGender(2, propisyu.GenderMasculine)  // "два"
-propisyu.IntToWordsGender(2, propisyu.GenderFeminine)   // "две"
-propisyu.IntToWordsGender(1, propisyu.GenderNeuter)     // "одно"
+propisyu.IntToWords(42)                                // сорок два
+propisyu.IntToWords(1000)                              // одна тысяча
+propisyu.IntToWords(-321)                              // минус триста двадцать один
+
+propisyu.IntToWordsGender(2, propisyu.GenderMasculine) // два
+propisyu.IntToWordsGender(2, propisyu.GenderFeminine)  // две
+propisyu.IntToWordsGender(1, propisyu.GenderNeuter)    // одно
 ```
 
-### Decimal Functions
+Gender constants: `GenderMasculine`, `GenderFeminine`, `GenderNeuter`.
 
-#### `DecimalToWords(decimalStr string) (string, error)`
-Converts a decimal number from string to words. Fractional part is truncated to 2 decimal places.
+### Decimals
+
+| Function | Description |
+|---|---|
+| `DecimalToWords(s string) (string, error)` | String with fixed `.xx` precision → words |
+| `DecimalValueToWords(d decimal.Decimal) (string, error)` | `shopspring/decimal` → words |
+| `DecimalToWordsPrecision(s string, precision int) (string, error)` | String with arbitrary 1–9 digit precision |
 
 ```go
-result, err := propisyu.DecimalToWords("3.14")
-// "три целых четырнадцать сотых"
+propisyu.DecimalToWords("123.45")
+// сто двадцать три целых сорок пять сотых
+
+propisyu.DecimalValueToWords(decimal.NewFromFloat(3.14159))
+// три целых четырнадцать сотых
+
+propisyu.DecimalToWords("-0.50")
+// минус ноль целых пятьдесят сотых
 ```
 
-#### `DecimalValueToWords(d decimal.Decimal) (string, error)`
-Converts a `decimal.Decimal` value to words. Fractional part is truncated (not rounded!) to 2 decimal places.
+Key things to know:
+
+- The fractional part is **truncated, not rounded**: `1.999` → "одна
+  целая девяносто девять сотых".
+- The whole part is always rendered in the **feminine gender** ("одна
+  целая", "две целых").
+- The minus sign is preserved even for `-0.xx`, where the whole part is
+  zero.
+
+### Ordinals
+
+| Function | Description |
+|---|---|
+| `Ordinal(n int, gender Gender) string` | Ordinal number in the chosen gender |
 
 ```go
-d := decimal.NewFromFloat(3.14159)
-result, err := propisyu.DecimalValueToWords(d)
-// "три целых четырнадцать сотых" (truncates, not rounds)
+propisyu.Ordinal(21,        propisyu.GenderMasculine) // двадцать первый
+propisyu.Ordinal(1000,      propisyu.GenderFeminine)  // тысячная
+propisyu.Ordinal(1_000_000, propisyu.GenderMasculine) // миллионный
 ```
 
-**Important:** The function truncates, not rounds:
-- `1.999` → "один целых девяносто девять сотых"
-- `1.995` → "один целых девяносто девять сотых"
+### Currency & Money
 
-### Declension Function
-
-#### `Decline(n int, one, two, five string) string`
-Chooses the correct noun form based on the number.
-
-Parameters:
-- `n` - the number
-- `one` - form for 1, 21, 31... (рубль, день, товар)
-- `two` - form for 2-4, 22-24... (рубля, дня, товара)
-- `five` - form for 0, 5-20, 25-30... (рублей, дней, товаров)
+| Function / type | Description |
+|---|---|
+| `type Currency struct { ... }` | Currency descriptor: three forms for the whole part, three for the fraction, gender for each |
+| `CurrencyRUB`, `CurrencyUSD`, `CurrencyEUR` | Built-in presets |
+| `Money(whole, cents int, c Currency) string` | Amount in words from pre-parsed fields |
+| `MoneyFromString(amount string, c Currency) (string, error)` | Parses `"1234.56"` and returns the result |
 
 ```go
-propisyu.Decline(1, "рубль", "рубля", "рублей")   // "рубль"
-propisyu.Decline(2, "рубль", "рубля", "рублей")   // "рубля"
-propisyu.Decline(5, "рубль", "рубля", "рублей")   // "рублей"
-propisyu.Decline(11, "рубль", "рубля", "рублей")  // "рублей"
-propisyu.Decline(21, "рубль", "рубля", "рублей")  // "рубль"
+propisyu.Money(1234, 56, propisyu.CurrencyRUB)
+// одна тысяча двести тридцать четыре рубля пятьдесят шесть копеек
+
+propisyu.Money(42, 0, propisyu.CurrencyUSD)
+// сорок два доллара ноль центов
 ```
 
-## Why go-propisyu
+`Currency` fields: `WholeOne`, `WholeTwo`, `WholeFive`, `WholeGender`,
+`FracOne`, `FracTwo`, `FracFive`, `FracGender`. Build your own preset for
+any currency (tokens, points, loyalty units) without touching the
+library code.
 
-- **Pure Go** — not a C wrapper; easy to build and deploy anywhere
-- **Correct grammar** — three genders, proper declension for all numeric ranges
-- **Zero deps** — `IntToWords` and `Decline` require no third-party packages
-- **Production-ready** — CI with linter, tests, semantic versioning, goreleaser
-- **Open license** — MIT, free for commercial use
+### Declension
+
+| Function | Description |
+|---|---|
+| `Decline(n int, one, two, five string) string` | Picks a noun form based on the number |
+
+The rule matches Russian grammar:
+
+| Last digit of `n` | `n % 100 ∈ 11…19` | Form | Example |
+|---|---|---|---|
+| 1 | no | `one` | рубль, день |
+| 2, 3, 4 | no | `two` | рубля, дня |
+| 0, 5–9 | — | `five` | рублей, дней |
+| any | yes | `five` | 11 → рублей, 19 → рублей |
+
+Negative numbers are handled by magnitude: `Decline(-1, …)` → the `one`
+form.
+
+### Errors
+
+`ErrNumberTooLarge` is returned from `DecimalValueToWords` when the
+whole part of a `decimal.Decimal` does not fit in Go `int`.
 
 ## Limitations
 
-- Integer numbers: supports values in the `int` range (typically -2³¹ to 2³¹-1 or -2⁶³ to 2⁶³-1)
-- Decimal numbers: only 2 decimal places are supported (rest is truncated)
-- `DecimalValueToWords` returns `ErrNumberTooLarge` error if number doesn't fit in `int`
-
-## Testing
-
-```bash
-go test ./...              # Run all tests
-go test -v ./...           # With verbose output
-go test -cover ./...       # With code coverage
-```
+- Integers are bounded by Go `int` — on 64-bit platforms this is
+  ±9.2·10¹⁸.
+- `DecimalToWords` and `DecimalValueToWords` only work with two
+  fractional digits (anything beyond is truncated). For higher precision
+  use `DecimalToWordsPrecision` (1–9 digits).
+- Classifier and mixed counting systems (e.g. Yakut-style agreement)
+  are not supported — the library targets Russian grammar strictly.
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-MIT
+MIT. See [LICENSE](LICENSE).
