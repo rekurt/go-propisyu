@@ -578,6 +578,44 @@ func TestDecimalValueToWords(t *testing.T) {
 			want:    "ноль целых ноль сотых",
 			wantErr: false,
 		},
+		// Regression guards: before the fix, DecimalValueToWords silently
+		// produced wrong output for numbers whose whole part overflowed
+		// int64. decimal.Decimal.IntPart() wraps on overflow, and the old
+		// `whole > math.MaxInt64` guard was a tautology on 64-bit
+		// platforms (math.MaxInt64 == math.MaxInt). The fix checks the
+		// arbitrary-precision BigInt representation BEFORE calling IntPart.
+		{
+			name:    "overflow 10^29",
+			decimal: decimal.RequireFromString("99999999999999999999999999999.99"),
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name:    "overflow 10^20 positive",
+			decimal: decimal.RequireFromString("100000000000000000000.00"),
+			want:    "",
+			wantErr: true,
+		},
+		{
+			name:    "overflow negative 10^29",
+			decimal: decimal.RequireFromString("-99999999999999999999999999999.00"),
+			want:    "",
+			wantErr: true,
+		},
+		// Just barely fits: 2^63-1 = 9223372036854775807 (max int64)
+		{
+			name:    "max int64 fits",
+			decimal: decimal.RequireFromString("9223372036854775807.00"),
+			want:    "девять квинтиллионов двести двадцать три квадриллиона триста семьдесят два триллиона тридцать шесть миллиардов восемьсот пятьдесят четыре миллиона семьсот семьдесят пять тысяч восемьсот семь целых ноль сотых",
+			wantErr: false,
+		},
+		// One past max int64 must be rejected
+		{
+			name:    "max int64 plus one overflows",
+			decimal: decimal.RequireFromString("9223372036854775808.00"),
+			want:    "",
+			wantErr: true,
+		},
 	}
 
 	for _, tc := range cases {

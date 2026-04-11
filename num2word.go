@@ -151,11 +151,26 @@ func DecimalToWords(decimalStr string) (string, error) {
 // Returns the number in Russian with proper declensions, e.g.
 // "сто двадцать три целых сорок пять сотых".
 // Only the first two decimal places are used; additional digits are truncated.
+//
+// Returns ErrNumberTooLarge when the whole part does not fit in Go int.
+// shopspring/decimal can hold arbitrary-precision values, but this package
+// renders through the int-based pipeline used by IntToWordsGender.
 func DecimalValueToWords(d decimal.Decimal) (string, error) {
-	whole := d.IntPart()
-
-	if whole > int64(^uint(0)>>1) || whole < -int64(^uint(0)>>1)-1 {
-		return "", fmt.Errorf("%w: %v", ErrNumberTooLarge, whole)
+	// Check for int64 fit BEFORE calling IntPart(). decimal.Decimal.IntPart()
+	// silently wraps on overflow (e.g. 10^29 → 7886392056514347007), so the
+	// previous `whole > math.MaxInt64` guard never fired for values that had
+	// already been truncated by IntPart — we have to look at the original
+	// arbitrary-precision integer representation.
+	truncBig := d.Truncate(0).BigInt()
+	if !truncBig.IsInt64() {
+		return "", fmt.Errorf("%w: %s", ErrNumberTooLarge, truncBig.String())
+	}
+	whole := truncBig.Int64()
+	// On 32-bit platforms int is narrower than int64. The core conversion
+	// pipeline takes int, so re-check the int fit explicitly instead of
+	// relying on the silent int64 → int narrowing below.
+	if whole > int64(math.MaxInt) || whole < int64(math.MinInt) {
+		return "", fmt.Errorf("%w: %d", ErrNumberTooLarge, whole)
 	}
 
 	fractionalPart := d.Sub(decimal.NewFromInt(whole))
