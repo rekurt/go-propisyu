@@ -210,6 +210,23 @@ func TestGetDeclensionEdgeCases(t *testing.T) {
 	}
 }
 
+func TestDeclineNegativeNumbers(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(t, "рубль", Decline(-1, "рубль", "рубля", "рублей"))
+	assert.Equal(t, "рубля", Decline(-2, "рубль", "рубля", "рублей"))
+	assert.Equal(t, "рублей", Decline(-5, "рубль", "рубля", "рублей"))
+}
+
+func TestIntToWordsMinInt(t *testing.T) {
+	t.Parallel()
+
+	minInt := -int(^uint(0)>>1) - 1
+	got := IntToWords(minInt)
+	assert.True(t, strings.HasPrefix(got, "минус "))
+	assert.NotEqual(t, "", strings.TrimSpace(got))
+}
+
 func TestDecimalToWords(t *testing.T) {
 	t.Parallel()
 
@@ -259,6 +276,12 @@ func TestDecimalToWords(t *testing.T) {
 			name:    "one hundredth",
 			decimal: "5.01",
 			want:    "пять целых одна сотая",
+			wantErr: false,
+		},
+		{
+			name:    "negative zero whole",
+			decimal: "-0.50",
+			want:    "минус ноль целых пятьдесят сотых",
 			wantErr: false,
 		},
 		{
@@ -360,6 +383,18 @@ func TestDecimalToWordsPrecision(t *testing.T) {
 			decimal:   "21.15",
 			precision: 2,
 			want:      "двадцать одна целая пятнадцать сотых",
+		},
+		{
+			name:      "negative zero whole tenths",
+			decimal:   "-0.5",
+			precision: 1,
+			want:      "минус ноль целых пять десятых",
+		},
+		{
+			name:      "negative zero whole hundredths",
+			decimal:   "-0.07",
+			precision: 2,
+			want:      "минус ноль целых семь сотых",
 		},
 		{
 			name:      "invalid precision too low",
@@ -469,6 +504,12 @@ func TestDecimalValueToWords(t *testing.T) {
 			name:    "negative compound twenty one",
 			decimal: decimal.NewFromFloat(-21.15),
 			want:    "минус двадцать одна целая пятнадцать сотых",
+			wantErr: false,
+		},
+		{
+			name:    "negative zero whole",
+			decimal: decimal.RequireFromString("-0.50"),
+			want:    "минус ноль целых пятьдесят сотых",
 			wantErr: false,
 		},
 		{

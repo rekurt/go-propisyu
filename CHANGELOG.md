@@ -18,8 +18,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Decline` (and internal `getDeclension`) now correctly handle negative
   numbers. Previously, Go's sign-preserving `%` operator caused negative inputs
   to fall through to the `five` form regardless of the actual last digit — for
-  example `Decline(-1, ...)` returned `five` instead of `one`. The function now
-  takes the absolute value before the modulo.
+  example `Decline(-1, ...)` returned `five` instead of `one`. The function
+  now reduces modulo 100 first and then negates the remainder, which is also
+  safe for `math.MinInt` (where `-n` on the full-magnitude value would
+  overflow).
+- `IntToWords` / `IntToWordsGender` now handle `math.MinInt` correctly.
+  Previously the `"минус " + convertIntToWords(-n, dict)` path overflowed at
+  `-math.MinInt`; conversion now routes the positive magnitude through a
+  `uint64` helper so the smallest int produces a valid phrase without
+  panicking.
+- `DecimalToWords`, `DecimalValueToWords`, and `DecimalToWordsPrecision` now
+  preserve the minus sign for values like `-0.50` where the whole part is
+  zero and the fractional part is non-zero. Previously the sign was lost
+  because the zero whole part carries no sign information, so `"-0.50"` and
+  `"0.50"` rendered identically. All three entry points now prefix
+  `"минус "` in this case, keeping string- and `decimal.Decimal`-based APIs
+  consistent.
 
 ### BREAKING CHANGES
 

@@ -15,10 +15,13 @@ func Decline(n int, one, two, five string) string {
 	return getDeclension(n, one, two, five)
 }
 func getDeclension(n int, one, two, five string) string {
+	// Reduce first, then flip the sign: Go's `%` keeps the sign of the
+	// dividend, so for any int (including math.MinInt) `n %= 100` lands in
+	// (-99, 99), and the subsequent negation cannot overflow.
+	n %= 100
 	if n < 0 {
 		n = -n
 	}
-	n %= 100
 	if n >= 11 && n <= 19 {
 		return five
 	}

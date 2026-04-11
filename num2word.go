@@ -3,6 +3,7 @@ package propisyu
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
@@ -101,6 +102,9 @@ func IntToWordsGender(n int, gender Gender) string {
 // "сто двадцать три целых сорок пять сотых".
 // Only the first two decimal places are used; additional digits are truncated.
 func DecimalToWords(decimalStr string) (string, error) {
+	trimmed := strings.TrimSpace(decimalStr)
+	isNegative := strings.HasPrefix(trimmed, "-")
+
 	parts := strings.SplitN(decimalStr, ".", 2)
 
 	whole, err := strconv.Atoi(parts[0])
@@ -132,6 +136,10 @@ func DecimalToWords(decimalStr string) (string, error) {
 		Decline(hundredths, "сотая", "сотых", "сотых"),
 	)
 
+	if isNegative && whole == 0 && hundredths > 0 {
+		result = "минус " + result
+	}
+
 	return result, nil
 }
 
@@ -159,6 +167,13 @@ func DecimalValueToWords(d decimal.Decimal) (string, error) {
 		Decline(int(hundredths), "сотая", "сотых", "сотых"),
 	)
 
+	// When the whole part is zero, IntPart() drops the sign, so "-0.50"
+	// would otherwise render the same as "0.50". Preserve the minus to
+	// stay consistent with DecimalToWords(`-0.xx`).
+	if d.IsNegative() && whole == 0 && hundredths > 0 {
+		result = "минус " + result
+	}
+
 	return result, nil
 }
 
@@ -168,14 +183,33 @@ func convertIntToWords(n int, dict *dictionary) string {
 	}
 
 	if n < 0 {
+		// For math.MinInt, -n would overflow int (|math.MinInt| = math.MaxInt+1
+		// does not fit in a signed int). Route the magnitude through uint64
+		// instead. math.MaxInt is a positive compile-time constant, so the
+		// conversion to uint64 is statically safe.
+		if n == math.MinInt {
+			return "минус " + convertPositiveUint64ToWords(uint64(math.MaxInt)+1, dict)
+		}
 		return "минус " + convertIntToWords(-n, dict)
+	}
+
+	return convertPositiveUint64ToWords(uint64(n), dict)
+}
+
+func convertPositiveUint64ToWords(n uint64, dict *dictionary) string {
+	if n == 0 {
+		return "ноль"
 	}
 
 	var parts []string
 	order := 0
 
 	for n > 0 {
-		triad := n % 1000
+		// n%1000 is in [0, 999]; the narrowing cast is statically safe.
+		// gosec's G115 is purely type-based and cannot see the value range,
+		// so suppress it with gosec's native #nosec directive (inline
+		// `//nolint:gosec` is not reliably propagated by golangci-lint v1).
+		triad := int(n % 1000) //#nosec G115 -- bounded to [0, 999]
 		n /= 1000
 
 		if triad != 0 {
@@ -255,6 +289,8 @@ func DecimalToWordsPrecision(decimalStr string, precision int) (string, error) {
 		{"миллиардная", "миллиардных", "миллиардных"},                // 9
 	}
 
+	isNegative := strings.HasPrefix(strings.TrimSpace(decimalStr), "-")
+
 	parts := strings.SplitN(decimalStr, ".", 2)
 
 	whole, err := strconv.Atoi(parts[0])
@@ -289,6 +325,13 @@ func DecimalToWordsPrecision(decimalStr string, precision int) (string, error) {
 		IntToWordsGender(fracVal, GenderFeminine),
 		Decline(fracVal, units[0], units[1], units[2]),
 	)
+
+	// Same rationale as DecimalToWords: for inputs like "-0.5" the minus
+	// sign would be lost because strconv.Atoi("0") → 0 and IntToWordsGender
+	// drops it. Preserve it explicitly.
+	if isNegative && whole == 0 && fracVal > 0 {
+		result = "минус " + result
+	}
 
 	return result, nil
 }
