@@ -77,6 +77,46 @@ func TestMoneyFromString(t *testing.T) {
 			cur:     CurrencyRUB,
 			wantErr: true,
 		},
+		// Regression guards: the minus sign must be preserved when the whole
+		// part rounds to zero. Without the fix MoneyFromString(-0.xx) used
+		// to drop the sign because strconv.Atoi("-0") == 0 and Money carries
+		// no sign information. Matches the same guard pattern PR #16 added
+		// for DecimalToWords / DecimalValueToWords / DecimalToWordsPrecision.
+		{
+			name:   "negative zero whole RUB 50 cents",
+			amount: "-0.50",
+			cur:    CurrencyRUB,
+			want:   "минус ноль рублей пятьдесят копеек",
+		},
+		{
+			name:   "negative zero whole RUB one cent",
+			amount: "-0.01",
+			cur:    CurrencyRUB,
+			want:   "минус ноль рублей одна копейка",
+		},
+		{
+			name:   "negative zero whole USD 5 cents",
+			amount: "-0.05",
+			cur:    CurrencyUSD,
+			want:   "минус ноль долларов пять центов",
+		},
+		// Regular negatives keep working — IntToWordsGender already carries
+		// the sign in the whole part, so the guard must not double-prefix.
+		{
+			name:   "negative whole does not double minus",
+			amount: "-1234.56",
+			cur:    CurrencyRUB,
+			want:   "минус одна тысяча двести тридцать четыре рубля пятьдесят шесть копеек",
+		},
+		// Zero with zero cents is a true zero — no minus even when the
+		// input string has a leading "-" (which would never legitimately
+		// appear for zero, but the guard must still not fire).
+		{
+			name:   "negative-prefixed zero stays plain zero",
+			amount: "-0.00",
+			cur:    CurrencyRUB,
+			want:   "ноль рублей ноль копеек",
+		},
 	}
 
 	for _, tc := range cases {

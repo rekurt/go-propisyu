@@ -47,7 +47,15 @@ func Money(whole, cents int, c Currency) string { //nolint:gocritic // hugeParam
 }
 
 // MoneyFromString parses "1234.56" and formats with currency.
+//
+// The minus sign is preserved even for amounts where the whole part rounds
+// to zero and the fractional part is non-zero, so "-0.50" renders as
+// "минус ноль рублей пятьдесят копеек". Without this guard the sign would
+// be lost, because strconv.Atoi("-0") == 0 and Money(0, 50, …) carries
+// no sign information.
 func MoneyFromString(amount string, c Currency) (string, error) { //nolint:gocritic // hugeParam: preserve public API compatibility
+	isNegative := strings.HasPrefix(amount, "-")
+
 	parts := strings.SplitN(amount, ".", 2)
 	whole, err := strconv.Atoi(parts[0])
 	if err != nil {
@@ -67,5 +75,10 @@ func MoneyFromString(amount string, c Currency) (string, error) { //nolint:gocri
 			return "", fmt.Errorf("invalid fractional part: %w", err)
 		}
 	}
-	return Money(whole, cents, c), nil
+
+	result := Money(whole, cents, c)
+	if isNegative && whole == 0 && cents > 0 {
+		result = "минус " + result
+	}
+	return result, nil
 }
