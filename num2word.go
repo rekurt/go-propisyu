@@ -3,6 +3,7 @@ package propisyu
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 
@@ -182,11 +183,12 @@ func convertIntToWords(n int, dict *dictionary) string {
 	}
 
 	if n < 0 {
-		minInt := -int(^uint(0)>>1) - 1
-		if n == minInt {
-			nAbs := uint64(-(n + 1))
-			nAbs++
-			return "минус " + convertPositiveUint64ToWords(nAbs, dict)
+		// For math.MinInt, -n would overflow int (|math.MinInt| = math.MaxInt+1
+		// does not fit in a signed int). Route the magnitude through uint64
+		// instead. math.MaxInt is a positive compile-time constant, so the
+		// conversion to uint64 is statically safe.
+		if n == math.MinInt {
+			return "минус " + convertPositiveUint64ToWords(uint64(math.MaxInt)+1, dict)
 		}
 		return "минус " + convertIntToWords(-n, dict)
 	}
@@ -203,7 +205,8 @@ func convertPositiveUint64ToWords(n uint64, dict *dictionary) string {
 	order := 0
 
 	for n > 0 {
-		triad := int(n % 1000)
+		// n%1000 is in [0, 999] — always fits in int regardless of platform.
+		triad := int(n % 1000) //nolint:gosec // bounded to [0, 999]
 		n /= 1000
 
 		if triad != 0 {
