@@ -7,46 +7,60 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/rekurt/go-propisyu)](https://goreportcard.com/report/github.com/rekurt/go-propisyu)
 [![codecov](https://codecov.io/gh/rekurt/go-propisyu/branch/master/graph/badge.svg)](https://codecov.io/gh/rekurt/go-propisyu)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Go Version](https://img.shields.io/github/go-mod/go-version/rekurt/go-propisyu)](go.mod)
 
-`go-propisyu` — Go-библиотека для конвертации чисел в слова на русском языке с правильными склонениями и грамматическими родами. Числа прописью нужны в счетах, фискальных чеках, бухгалтерских документах, банковских выписках, голосовых ассистентах, чат-ботах и любых сервисах, где необходимо грамотно записывать суммы и количества словами.
+Одна библиотека, которая закрывает всё про **«числа прописью»** на русском:
+суммы с валютой, десятичные числа произвольной точности, порядковые номера
+во всех трёх родах, ручные склонения для любого существительного. Одна
+строка Go вместо километра ручных условий — для счетов, фискальных чеков,
+документов, 1С-интеграций и голосовых ассистентов.
 
 ```go
-propisyu.IntToWords(42)                              // "сорок два"
-propisyu.Decline(5, "рубль", "рубля", "рублей")      // "рублей"
-propisyu.DecimalToWords("1234.56")                    // "одна тысяча двести тридцать четыре целых пятьдесят шесть сотых"
+propisyu.Money(1234, 56, propisyu.CurrencyRUB)
+// одна тысяча двести тридцать четыре рубля пятьдесят шесть копеек
+
+propisyu.Ordinal(1, propisyu.GenderFeminine)
+// первая
+
+propisyu.DecimalToWordsPrecision("3.141", 3)
+// три целых сто сорок одна тысячная
+
+propisyu.Decline(5, "заказ", "заказа", "заказов")
+// заказов
 ```
 
-## Кому подходит
+## Возможности
+
+- **Весь диапазон Go `int`** — от `math.MinInt` до `math.MaxInt`, до
+  дуодециллионов (10³⁹) включительно. Крайние значения (в т.ч. `MinInt`)
+  не ломают `-n`, библиотека безопасно поднимает магнитуду через `uint64`.
+- **Три рода** — `GenderMasculine`, `GenderFeminine`, `GenderNeuter` —
+  применяются и к кардиналам, и к порядковым.
+- **Порядковые числительные** — `Ordinal(n, gender)` даёт «первый / первая
+  / первое», корректно для составных («сорок второй»), для round-чисел
+  («тысячный», «сороковой», «миллионный») и для всех трёх родов.
+- **Десятичные с произвольной точностью** — `DecimalToWordsPrecision`
+  поддерживает 1–9 знаков после запятой: десятых → миллиардных.
+  `DecimalValueToWords` принимает `shopspring/decimal` напрямую.
+- **Готовые валюты** — `Money` + пресеты `CurrencyRUB`, `CurrencyUSD`,
+  `CurrencyEUR`. Пара `(1234, 56)` превращается в «одна тысяча двести
+  тридцать четыре рубля пятьдесят шесть копеек» одной строкой.
+- **Свои существительные через `Decline`** — правильные русские формы
+  для любого слова, корректно обрабатываются 11–14, 21 и отрицательные
+  числа.
+- **Нулевые внешние зависимости в core** — `shopspring/decimal` нужен
+  только если вы сами используете `DecimalValueToWords`. CI, линтер,
+  тесты, семантическое версионирование, release через goreleaser.
+
+## Где применяется
 
 | Сфера | Пример |
-|-------|--------|
+|---|---|
 | Финтех и банкинг | Сумма прописью в платёжных поручениях и выписках |
-| Бухгалтерия и 1С | Генерация счетов-фактур, актов, накладных |
+| Бухгалтерия и 1С | Счета-фактуры, акты, накладные |
 | Фискальные чеки | Касса / ОФД — сумма словами по 54-ФЗ |
 | Голосовые ассистенты | TTS-озвучка сумм и количеств |
 | Чат-боты | Ответы с суммами на естественном языке |
-| Генерация документов | Шаблоны договоров, доверенностей, актов |
-
-## Ключевые особенности
-
-- Поддержка огромных чисел вплоть до дуодециллионов (10³⁹)
-- Грамматические роды: мужской, женский и средний для корректных окончаний
-- Функция `Decline` для автоматического склонения существительных
-- Работа с десятичными числами через строки или `decimal.Decimal`
-- Нулевые внешние зависимости для базовых функций
-- Высокое покрытие тестами, CI/CD, линтер
-
-## Содержание
-
-- [Установка](#установка)
-- [Быстрый старт](#быстрый-старт)
-- [Примеры использования](#примеры-использования)
-- [API](#api)
-- [Почему go-propisyu](#почему-go-propisyu)
-- [Ограничения](#ограничения)
-- [Contributing](#contributing)
-- [Лицензия](#лицензия)
+| Генерация документов | Договоры, доверенности, акты |
 
 ## Установка
 
@@ -54,293 +68,193 @@ propisyu.DecimalToWords("1234.56")                    // "одна тысяча 
 go get github.com/rekurt/go-propisyu
 ```
 
-Для работы с `decimal.Decimal`:
+`shopspring/decimal` нужен только для `DecimalValueToWords`:
+
 ```bash
 go get github.com/shopspring/decimal
 ```
 
-## Публичные функции
+## Использование
 
-| Функция | Описание |
-|---------|----------|
-| `IntToWords(n int) string` | Конвертирует целое число в слова (мужской род) |
-| `IntToWordsGender(n int, gender Gender) string` | Конвертирует целое число в слова с указанием рода |
-| `DecimalToWords(decimalStr string) (string, error)` | Конвертирует десятичное число из строки в слова |
-| `DecimalValueToWords(d decimal.Decimal) (string, error)` | Конвертирует `decimal.Decimal` значение в слова |
-| `Decline(n int, one, two, five string) string` | Выбирает правильную форму склонения существительного |
-
-### Константы рода
+### Сумма прописью для счёта
 
 ```go
-const (
-    GenderMasculine Gender = 1  // Мужской род: "один", "два"
-    GenderFeminine  Gender = 2  // Женский род: "одна", "две"
-    GenderNeuter    Gender = 3  // Средний род: "одно", "два"
-)
+res, _ := propisyu.MoneyFromString("1234.56", propisyu.CurrencyRUB)
+fmt.Println(res)
+// одна тысяча двести тридцать четыре рубля пятьдесят шесть копеек
+
+fmt.Println(propisyu.Money(1, 1, propisyu.CurrencyRUB))
+// один рубль одна копейка
+
+fmt.Println(propisyu.Money(100, 99, propisyu.CurrencyEUR))
+// сто евро девяносто девять центов
 ```
 
-### Ошибки
+`Money` сам выбирает род и склонение для целой и дробной частей — не надо
+вручную жонглировать «рубль / рубля / рублей».
 
-- `ErrNumberTooLarge` - число слишком велико для конвертации (не помещается в `int`)
-
-## Быстрый старт
-
-### Целые числа
+### Десятичные с точностью больше двух знаков
 
 ```go
-package main
+res, _ := propisyu.DecimalToWordsPrecision("3.14159", 5)
+fmt.Println(res)
+// три целых четырнадцать тысяч сто пятьдесят девять стотысячных
 
-import (
-	"fmt"
-
-	"github.com/rekurt/go-propisyu"
-)
-
-func main() {
-	// Базовая конвертация (мужской род по умолчанию)
-	fmt.Println(propisyu.IntToWords(321))
-	// триста двадцать один
-
-	// Конвертация с указанием рода
-	fmt.Println(propisyu.IntToWordsGender(2, propisyu.GenderFeminine))
-	// две
-
-	fmt.Println(propisyu.IntToWordsGender(2, propisyu.GenderMasculine))
-	// два
-
-	// Автоматическое склонение существительных
-	fmt.Println(propisyu.Decline(1, "рубль", "рубля", "рублей"))   // рубль
-	fmt.Println(propisyu.Decline(2, "рубль", "рубля", "рублей"))   // рубля
-	fmt.Println(propisyu.Decline(5, "рубль", "рубля", "рублей"))   // рублей
-	fmt.Println(propisyu.Decline(21, "рубль", "рубля", "рублей"))  // рубль
-}
+res, _ = propisyu.DecimalToWordsPrecision("3.5", 1)
+fmt.Println(res)
+// три целых пять десятых
 ```
 
-### Десятичные числа
+Параметр `precision` — это число знаков после запятой (1–9). От него
+зависит, во что склоняется дробная часть: десятых, сотых, тысячных,
+десятитысячных, стотысячных, миллионных, десятимиллионных,
+стомиллионных, миллиардных.
 
-#### Способ 1: Используя строку
+### Порядковые номера для документов
 
 ```go
-package main
+fmt.Println(propisyu.Ordinal(1, propisyu.GenderMasculine))     // первый
+fmt.Println(propisyu.Ordinal(1, propisyu.GenderFeminine))      // первая
+fmt.Println(propisyu.Ordinal(1, propisyu.GenderNeuter))        // первое
 
-import (
-	"fmt"
-	"log"
-
-	"github.com/rekurt/go-propisyu"
-)
-
-func main() {
-	result, err := propisyu.DecimalToWords("123.45")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(result)
-	// сто двадцать три целых сорок пять сотых
-}
+fmt.Println(propisyu.Ordinal(42, propisyu.GenderMasculine))    // сорок второй
+fmt.Println(propisyu.Ordinal(1000, propisyu.GenderFeminine))   // тысячная
+fmt.Println(propisyu.Ordinal(40, propisyu.GenderMasculine))    // сороковой
 ```
 
-#### Способ 2: Используя decimal.Decimal
+Работает и для round-чисел («тысячный», «миллионный»), и для составных
+(«сорок второй», «двадцать первый»).
+
+### Свои склонения через `Decline`
 
 ```go
-package main
-
-import (
-	"fmt"
-	"log"
-
-	"github.com/rekurt/go-propisyu"
-	"github.com/shopspring/decimal"
-)
-
-func main() {
-	d := decimal.NewFromFloat(123.45)
-	result, err := propisyu.DecimalValueToWords(d)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(result)
-	// сто двадцать три целых сорок пять сотых
-}
+fmt.Println(propisyu.Decline(5,  "товар", "товара", "товаров")) // товаров
+fmt.Println(propisyu.Decline(5,  "день",  "дня",    "дней"))    // дней
+fmt.Println(propisyu.Decline(21, "день",  "дня",    "дней"))    // день
+fmt.Println(propisyu.Decline(11, "рубль", "рубля",  "рублей"))  // рублей
 ```
 
-## Примеры использования
-
-### Сумма прописью для чека
-
-```go
-package main
-
-import (
-	"fmt"
-
-	"github.com/rekurt/go-propisyu"
-)
-
-func main() {
-	amount := 1234
-	rubles := propisyu.IntToWords(amount)
-	rublesDecl := propisyu.Decline(amount, "рубль", "рубля", "рублей")
-
-	fmt.Printf("%s %s 00 копеек", rubles, rublesDecl)
-	// одна тысяча двести тридцать четыре рубля 00 копеек
-}
-```
-
-### Большие числа
-
-```go
-package main
-
-import (
-	"fmt"
-	"log"
-
-	"github.com/rekurt/go-propisyu"
-)
-
-func main() {
-	result, err := propisyu.DecimalToWords("6453345242432.42")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(result)
-	// шесть триллионов четыреста пятьдесят три миллиарда
-	// триста сорок пять миллионов двести сорок две тысячи четыреста тридцать два
-	// целых сорок две сотых
-}
-```
-
-### Склонение с разными существительными
-
-```go
-package main
-
-import (
-	"fmt"
-
-	"github.com/rekurt/go-propisyu"
-)
-
-func main() {
-	count := 5
-
-	// Валюты
-	fmt.Println(count, propisyu.Decline(count, "доллар", "доллара", "долларов"))
-	// 5 долларов
-
-	// Единицы измерения
-	fmt.Println(count, propisyu.Decline(count, "метр", "метра", "метров"))
-	// 5 метров
-
-	// Предметы
-	fmt.Println(count, propisyu.Decline(count, "товар", "товара", "товаров"))
-	// 5 товаров
-
-	// Для 21
-	count = 21
-	fmt.Println(count, propisyu.Decline(count, "день", "дня", "дней"))
-	// 21 день
-}
-```
+Правило «1 / 2–4 / 5–20» с исключениями для 11–14 и для отрицательных
+чисел встроено — передавайте своё существительное в трёх формах и
+получайте правильную.
 
 ## API
 
-### Функции для целых чисел
+### Целые числа
 
-#### `IntToWords(n int) string`
-Конвертирует целое число в слова (мужской род по умолчанию).
-
-```go
-propisyu.IntToWords(42)    // "сорок два"
-propisyu.IntToWords(1000)  // "одна тысяча"
-```
-
-#### `IntToWordsGender(n int, gender Gender) string`
-Конвертирует целое число в слова с указанием рода.
-
-Доступные роды:
-- `GenderMasculine` (1) - мужской род
-- `GenderFeminine` (2) - женский род
-- `GenderNeuter` (3) - средний род
+| Функция | Описание |
+|---|---|
+| `IntToWords(n int) string` | Целое число в слова, мужской род по умолчанию |
+| `IntToWordsGender(n int, gender Gender) string` | То же с явным родом |
 
 ```go
-propisyu.IntToWordsGender(2, propisyu.GenderMasculine)  // "два"
-propisyu.IntToWordsGender(2, propisyu.GenderFeminine)   // "две"
-propisyu.IntToWordsGender(1, propisyu.GenderNeuter)     // "одно"
+propisyu.IntToWords(42)                                // сорок два
+propisyu.IntToWords(1000)                              // одна тысяча
+propisyu.IntToWords(-321)                              // минус триста двадцать один
+
+propisyu.IntToWordsGender(2, propisyu.GenderMasculine) // два
+propisyu.IntToWordsGender(2, propisyu.GenderFeminine)  // две
+propisyu.IntToWordsGender(1, propisyu.GenderNeuter)    // одно
 ```
 
-### Функции для десятичных чисел
+Константы рода: `GenderMasculine`, `GenderFeminine`, `GenderNeuter`.
 
-#### `DecimalToWords(decimalStr string) (string, error)`
-Конвертирует десятичное число из строки в слова. Дробная часть обрезается до 2 знаков.
+### Десятичные числа
+
+| Функция | Описание |
+|---|---|
+| `DecimalToWords(s string) (string, error)` | Строка с фиксированной точностью `.xx` → слова |
+| `DecimalValueToWords(d decimal.Decimal) (string, error)` | `shopspring/decimal` → слова |
+| `DecimalToWordsPrecision(s string, precision int) (string, error)` | Строка с произвольной точностью 1–9 знаков |
 
 ```go
-result, err := propisyu.DecimalToWords("3.14")
-// "три целых четырнадцать сотых"
+propisyu.DecimalToWords("123.45")
+// сто двадцать три целых сорок пять сотых
+
+propisyu.DecimalValueToWords(decimal.NewFromFloat(3.14159))
+// три целых четырнадцать сотых
+
+propisyu.DecimalToWords("-0.50")
+// минус ноль целых пятьдесят сотых
 ```
 
-#### `DecimalValueToWords(d decimal.Decimal) (string, error)`
-Конвертирует `decimal.Decimal` значение в слова. Дробная часть обрезается (не округляется!) до 2 знаков.
+Важные особенности:
+
+- Дробная часть **обрезается, а не округляется** (truncate): `1.999` →
+  `одна целая девяносто девять сотых`.
+- Целая часть всегда идёт в **женском роде** (`одна целая`, `две целых`).
+- Знак «минус» сохраняется даже для `-0.xx`, где целая часть равна нулю.
+
+### Порядковые числительные
+
+| Функция | Описание |
+|---|---|
+| `Ordinal(n int, gender Gender) string` | Порядковое число в указанном роде |
 
 ```go
-d := decimal.NewFromFloat(3.14159)
-result, err := propisyu.DecimalValueToWords(d)
-// "три целых четырнадцать сотых" (не округляет 3.14159 до 3.14, а обрезает)
+propisyu.Ordinal(21,        propisyu.GenderMasculine) // двадцать первый
+propisyu.Ordinal(1000,      propisyu.GenderFeminine)  // тысячная
+propisyu.Ordinal(1_000_000, propisyu.GenderMasculine) // миллионный
 ```
 
-**Важно:** Функция обрезает (truncate), а не округляет:
-- `1.999` → "один целых девяносто девять сотых"
-- `1.995` → "один целых девяносто девять сотых"
+### Валюты и деньги
 
-### Функция склонения
-
-#### `Decline(n int, one, two, five string) string`
-Выбирает правильную форму существительного в зависимости от числа.
-
-Параметры:
-- `n` - число
-- `one` - форма для 1, 21, 31... (рубль, день, товар)
-- `two` - форма для 2-4, 22-24... (рубля, дня, товара)
-- `five` - форма для 0, 5-20, 25-30... (рублей, дней, товаров)
+| Функция / тип | Описание |
+|---|---|
+| `type Currency struct { ... }` | Описание валюты: три формы целой, три формы дробной, род каждой части |
+| `CurrencyRUB`, `CurrencyUSD`, `CurrencyEUR` | Готовые пресеты |
+| `Money(whole, cents int, c Currency) string` | Сумма прописью по разобранным полям |
+| `MoneyFromString(amount string, c Currency) (string, error)` | Парсит `"1234.56"` и сразу отдаёт результат |
 
 ```go
-propisyu.Decline(1, "рубль", "рубля", "рублей")   // "рубль"
-propisyu.Decline(2, "рубль", "рубля", "рублей")   // "рубля"
-propisyu.Decline(5, "рубль", "рубля", "рублей")   // "рублей"
-propisyu.Decline(11, "рубль", "рубля", "рублей")  // "рублей"
-propisyu.Decline(21, "рубль", "рубля", "рублей")  // "рубль"
+propisyu.Money(1234, 56, propisyu.CurrencyRUB)
+// одна тысяча двести тридцать четыре рубля пятьдесят шесть копеек
+
+propisyu.Money(42, 0, propisyu.CurrencyUSD)
+// сорок два доллара ноль центов
 ```
 
-## Почему go-propisyu
+Поля `Currency`: `WholeOne`, `WholeTwo`, `WholeFive`, `WholeGender`,
+`FracOne`, `FracTwo`, `FracFive`, `FracGender`. Соберите свой пресет для
+любой валюты (токены, баллы, условные единицы) без правок в коде
+библиотеки.
 
-- **Чистый Go** — не обёртка над C-библиотекой, легко компилировать и деплоить
-- **Корректная грамматика** — три рода, правильные склонения для всех числовых диапазонов
-- **Без зависимостей** — `IntToWords` и `Decline` работают без сторонних пакетов
-- **production-ready** — CI с линтером, тесты, семантическое версионирование, goreleaser
-- **Открытая лицензия** — MIT, можно использовать в коммерческих проектах
+### Склонения
+
+| Функция | Описание |
+|---|---|
+| `Decline(n int, one, two, five string) string` | Выбирает форму существительного по числу |
+
+Правило совпадает с русской грамматикой:
+
+| Последняя цифра `n` | `n % 100 ∈ 11…19` | Форма | Пример |
+|---|---|---|---|
+| 1 | нет | `one` | рубль, день |
+| 2, 3, 4 | нет | `two` | рубля, дня |
+| 0, 5–9 | — | `five` | рублей, дней |
+| любая | да | `five` | 11 → рублей, 19 → рублей |
+
+Отрицательные числа обрабатываются по модулю: `Decline(-1, …)` → форма
+`one`.
+
+### Ошибки
+
+`ErrNumberTooLarge` — возвращается из `DecimalValueToWords`, если целая
+часть `decimal.Decimal` не помещается в Go `int`.
 
 ## Ограничения
 
-- Целые числа: поддерживаются значения в диапазоне `int` (обычно -2³¹ до 2³¹-1 или -2⁶³ до 2⁶³-1)
-- Десятичные числа: поддерживаются только 2 знака после запятой (остальное обрезается)
-- `DecimalValueToWords` вернет ошибку `ErrNumberTooLarge`, если число не помещается в `int`
-
-## Тесты
-
-```bash
-go test ./...              # Запустить все тесты
-go test -v ./...           # С подробным выводом
-go test -cover ./...       # С покрытием кода
-```
+- Целые числа ограничены Go `int` — на 64-битных платформах это ±9.2·10¹⁸.
+- `DecimalToWords` и `DecimalValueToWords` работают только с двумя знаками
+  после запятой (остальное обрезается). Для большей точности используйте
+  `DecimalToWordsPrecision` (1–9 знаков).
+- Классификаторы и смешанные системы счёта (например, якутское спряжение)
+  не поддерживаются — библиотека строго под русскую грамматику.
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributions are welcome! См. [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Лицензия
 
-MIT
+MIT. См. [LICENSE](LICENSE).
