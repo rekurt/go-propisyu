@@ -219,7 +219,12 @@ func convertPositiveUint64ToWords(n uint64, dict *dictionary) string {
 		return "ноль"
 	}
 
-	var parts []string
+	// uint64 max is ~1.8e19, which is 7 triads. dict.orders goes up to
+	// 13 (duodecillion). Preallocate enough for the worst case so the
+	// append loop never has to grow, and build the slice in natural
+	// (least-significant-first) order — we reverse in place at the end
+	// rather than prepending each iteration (O(n²) → O(n)).
+	parts := make([]string, 0, len(dict.orders))
 	order := 0
 
 	for n > 0 {
@@ -236,9 +241,14 @@ func convertPositiveUint64ToWords(n uint64, dict *dictionary) string {
 				forms := dict.orders[order]
 				triadWords += " " + getDeclension(triad%100, forms[0], forms[1], forms[2])
 			}
-			parts = append([]string{triadWords}, parts...)
+			parts = append(parts, triadWords)
 		}
 		order++
+	}
+
+	// Reverse in place so the most significant triad comes first.
+	for i, j := 0, len(parts)-1; i < j; i, j = i+1, j-1 {
+		parts[i], parts[j] = parts[j], parts[i]
 	}
 
 	return strings.Join(parts, " ")
