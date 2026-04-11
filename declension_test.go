@@ -385,6 +385,18 @@ func TestDecimalToWordsPrecision(t *testing.T) {
 			want:      "двадцать одна целая пятнадцать сотых",
 		},
 		{
+			name:      "negative zero whole tenths",
+			decimal:   "-0.5",
+			precision: 1,
+			want:      "минус ноль целых пять десятых",
+		},
+		{
+			name:      "negative zero whole hundredths",
+			decimal:   "-0.07",
+			precision: 2,
+			want:      "минус ноль целых семь сотых",
+		},
+		{
 			name:      "invalid precision too low",
 			decimal:   "1.5",
 			precision: 0,
@@ -492,6 +504,12 @@ func TestDecimalValueToWords(t *testing.T) {
 			name:    "negative compound twenty one",
 			decimal: decimal.NewFromFloat(-21.15),
 			want:    "минус двадцать одна целая пятнадцать сотых",
+			wantErr: false,
+		},
+		{
+			name:    "negative zero whole",
+			decimal: decimal.RequireFromString("-0.50"),
+			want:    "минус ноль целых пятьдесят сотых",
 			wantErr: false,
 		},
 		{

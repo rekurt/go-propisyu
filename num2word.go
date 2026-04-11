@@ -166,6 +166,13 @@ func DecimalValueToWords(d decimal.Decimal) (string, error) {
 		Decline(int(hundredths), "сотая", "сотых", "сотых"),
 	)
 
+	// When the whole part is zero, IntPart() drops the sign, so "-0.50"
+	// would otherwise render the same as "0.50". Preserve the minus to
+	// stay consistent with DecimalToWords(`-0.xx`).
+	if d.IsNegative() && whole == 0 && hundredths > 0 {
+		result = "минус " + result
+	}
+
 	return result, nil
 }
 
@@ -276,6 +283,8 @@ func DecimalToWordsPrecision(decimalStr string, precision int) (string, error) {
 		{"миллиардная", "миллиардных", "миллиардных"},                // 9
 	}
 
+	isNegative := strings.HasPrefix(strings.TrimSpace(decimalStr), "-")
+
 	parts := strings.SplitN(decimalStr, ".", 2)
 
 	whole, err := strconv.Atoi(parts[0])
@@ -310,6 +319,13 @@ func DecimalToWordsPrecision(decimalStr string, precision int) (string, error) {
 		IntToWordsGender(fracVal, GenderFeminine),
 		Decline(fracVal, units[0], units[1], units[2]),
 	)
+
+	// Same rationale as DecimalToWords: for inputs like "-0.5" the minus
+	// sign would be lost because strconv.Atoi("0") → 0 and IntToWordsGender
+	// drops it. Preserve it explicitly.
+	if isNegative && whole == 0 && fracVal > 0 {
+		result = "минус " + result
+	}
 
 	return result, nil
 }
