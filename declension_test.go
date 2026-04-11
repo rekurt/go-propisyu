@@ -338,6 +338,60 @@ func TestDecimalToWords(t *testing.T) {
 	}
 }
 
+// TestDecimalWhitespaceHandling is a regression guard for a bug where
+// DecimalToWords and DecimalToWordsPrecision applied strings.TrimSpace to
+// the sign-detection path but not to the main parsing path, so leading
+// whitespace caused strconv.Atoi to fail with "invalid syntax" even
+// though the function already advertised whitespace-insensitive handling
+// for the sign. After the fix both functions apply TrimSpace uniformly
+// to the entire input.
+func TestDecimalWhitespaceHandling(t *testing.T) {
+	t.Parallel()
+
+	t.Run("DecimalToWords accepts leading space", func(t *testing.T) {
+		t.Parallel()
+		got, err := DecimalToWords(" 123.45")
+		assert.NoError(t, err)
+		assert.Equal(t, "сто двадцать три целых сорок пять сотых", got)
+	})
+
+	t.Run("DecimalToWords accepts trailing newline", func(t *testing.T) {
+		t.Parallel()
+		got, err := DecimalToWords("123.45\n")
+		assert.NoError(t, err)
+		assert.Equal(t, "сто двадцать три целых сорок пять сотых", got)
+	})
+
+	t.Run("DecimalToWords accepts whitespace around -0.50", func(t *testing.T) {
+		t.Parallel()
+		got, err := DecimalToWords("\t-0.50\n")
+		assert.NoError(t, err)
+		assert.Equal(t, "минус ноль целых пятьдесят сотых", got)
+	})
+
+	t.Run("DecimalToWordsPrecision accepts leading tab", func(t *testing.T) {
+		t.Parallel()
+		got, err := DecimalToWordsPrecision("\t1.5", 1)
+		assert.NoError(t, err)
+		assert.Equal(t, "одна целая пять десятых", got)
+	})
+
+	t.Run("DecimalToWordsPrecision accepts whitespace around -0.5", func(t *testing.T) {
+		t.Parallel()
+		got, err := DecimalToWordsPrecision(" -0.5 ", 1)
+		assert.NoError(t, err)
+		assert.Equal(t, "минус ноль целых пять десятых", got)
+	})
+
+	// Non-whitespace junk must still be rejected — TrimSpace should not
+	// turn this into a silent permissive parser.
+	t.Run("DecimalToWords rejects junk prefix", func(t *testing.T) {
+		t.Parallel()
+		_, err := DecimalToWords("abc123.45")
+		assert.Error(t, err)
+	})
+}
+
 func TestDecimalToWordsPrecision(t *testing.T) {
 	t.Parallel()
 

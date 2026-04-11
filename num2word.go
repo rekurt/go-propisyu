@@ -101,9 +101,12 @@ func IntToWordsGender(n int, gender Gender) string {
 // Returns the number in Russian with proper declensions, e.g.
 // "сто двадцать три целых сорок пять сотых".
 // Only the first two decimal places are used; additional digits are truncated.
+//
+// Leading and trailing whitespace in the input is ignored, so
+// " 123.45\n" is accepted just like "123.45".
 func DecimalToWords(decimalStr string) (string, error) {
-	trimmed := strings.TrimSpace(decimalStr)
-	isNegative := strings.HasPrefix(trimmed, "-")
+	decimalStr = strings.TrimSpace(decimalStr)
+	isNegative := strings.HasPrefix(decimalStr, "-")
 
 	parts := strings.SplitN(decimalStr, ".", 2)
 
@@ -272,6 +275,8 @@ func (d *dictionary) triadToWords(n, order int) string {
 //
 //	DecimalToWordsPrecision("3.14", 2)  // "три целых четырнадцать сотых"
 //	DecimalToWordsPrecision("3.5", 1)   // "три целых пять десятых"
+//
+// Leading and trailing whitespace in the input is ignored.
 func DecimalToWordsPrecision(decimalStr string, precision int) (string, error) {
 	if precision < 1 || precision > 9 {
 		return "", fmt.Errorf("precision must be between 1 and 9, got %d", precision)
@@ -289,7 +294,8 @@ func DecimalToWordsPrecision(decimalStr string, precision int) (string, error) {
 		{"миллиардная", "миллиардных", "миллиардных"},                // 9
 	}
 
-	isNegative := strings.HasPrefix(strings.TrimSpace(decimalStr), "-")
+	decimalStr = strings.TrimSpace(decimalStr)
+	isNegative := strings.HasPrefix(decimalStr, "-")
 
 	parts := strings.SplitN(decimalStr, ".", 2)
 
