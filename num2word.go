@@ -205,8 +205,10 @@ func convertPositiveUint64ToWords(n uint64, dict *dictionary) string {
 	order := 0
 
 	for n > 0 {
-		// n%1000 is in [0, 999] — always fits in int regardless of platform.
-		triad := int(n % 1000) //nolint:gosec // bounded to [0, 999]
+		// n%1000 is in [0, 999]; narrow through uint16 so the widening
+		// uint16 → int is always lossless on any platform, and gosec can
+		// see that no overflow is possible.
+		triad := int(uint16(n % 1000))
 		n /= 1000
 
 		if triad != 0 {
