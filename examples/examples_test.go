@@ -96,3 +96,68 @@ func ExampleIntToWords_invoice() {
 	fmt.Printf("Количество: %s (%s)\n", words, decl)
 	// Output: Количество: сорок две (штуки)
 }
+
+func ExampleOrdinal() {
+	fmt.Println(propisyu.Ordinal(1, propisyu.GenderMasculine))
+	fmt.Println(propisyu.Ordinal(1, propisyu.GenderFeminine))
+	fmt.Println(propisyu.Ordinal(1, propisyu.GenderNeuter))
+	fmt.Println(propisyu.Ordinal(42, propisyu.GenderMasculine))
+	fmt.Println(propisyu.Ordinal(1000, propisyu.GenderFeminine))
+	// Output:
+	// первый
+	// первая
+	// первое
+	// сорок второй
+	// тысячная
+}
+
+func ExampleMoney() {
+	fmt.Println(propisyu.Money(1234, 56, propisyu.CurrencyRUB))
+	fmt.Println(propisyu.Money(1, 1, propisyu.CurrencyRUB))
+	fmt.Println(propisyu.Money(100, 99, propisyu.CurrencyEUR))
+	fmt.Println(propisyu.Money(42, 0, propisyu.CurrencyUSD))
+	// Output:
+	// одна тысяча двести тридцать четыре рубля пятьдесят шесть копеек
+	// один рубль одна копейка
+	// сто евро девяносто девять центов
+	// сорок два доллара ноль центов
+}
+
+func ExampleMoneyFromString() {
+	result, err := propisyu.MoneyFromString("1234.56", propisyu.CurrencyRUB)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(result)
+	// Output: одна тысяча двести тридцать четыре рубля пятьдесят шесть копеек
+}
+
+func ExampleDecimalToWordsPrecision() {
+	// precision=2 gives сотых, just like DecimalToWords
+	result, err := propisyu.DecimalToWordsPrecision("3.14", 2)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(result)
+	// Output: три целых четырнадцать сотых
+}
+
+func ExampleDecimalToWordsPrecision_tenths() {
+	// precision=1 gives десятых
+	result, err := propisyu.DecimalToWordsPrecision("3.5", 1)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(result)
+	// Output: три целых пять десятых
+}
+
+func ExampleDecimalToWordsPrecision_higherPrecision() {
+	// precision=5 gives стотысячных
+	result, err := propisyu.DecimalToWordsPrecision("3.14159", 5)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(result)
+	// Output: три целых четырнадцать тысяч сто пятьдесят девять стотысячных
+}
