@@ -128,8 +128,9 @@ func DecimalToWords(decimalStr string) (string, error) {
 	}
 
 	result := fmt.Sprintf(
-		"%s целых %s %s",
-		IntToWords(whole),
+		"%s %s %s %s",
+		IntToWordsGender(whole, GenderFeminine),
+		Decline(whole, "целая", "целых", "целых"),
 		IntToWordsGender(hundredths, GenderFeminine),
 		Decline(hundredths, "сотая", "сотых", "сотых"),
 	)
@@ -158,8 +159,9 @@ func DecimalValueToWords(d decimal.Decimal) (string, error) {
 	hundredths := fractionalPart.Mul(decimal.NewFromInt(100)).Abs().Truncate(0).IntPart()
 
 	result := fmt.Sprintf(
-		"%s целых %s %s",
-		IntToWords(int(whole)),
+		"%s %s %s %s",
+		IntToWordsGender(int(whole), GenderFeminine),
+		Decline(int(whole), "целая", "целых", "целых"),
 		IntToWordsGender(int(hundredths), GenderFeminine),
 		Decline(int(hundredths), "сотая", "сотых", "сотых"),
 	)
@@ -302,8 +304,9 @@ func DecimalToWordsPrecision(decimalStr string, precision int) (string, error) {
 	units := fractionUnits[precision-1]
 
 	result := fmt.Sprintf(
-		"%s целых %s %s",
-		IntToWords(whole),
+		"%s %s %s %s",
+		IntToWordsGender(whole, GenderFeminine),
+		Decline(whole, "целая", "целых", "целых"),
 		IntToWordsGender(fracVal, GenderFeminine),
 		Decline(fracVal, units[0], units[1], units[2]),
 	)

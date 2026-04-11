@@ -193,6 +193,12 @@ func TestGetDeclensionEdgeCases(t *testing.T) {
 		{name: "teens lower bound", num: 111, want: "товаров"},
 		{name: "ends with 2", num: 1002, want: "товара"},
 		{name: "ends with 7", num: 1007, want: "товаров"},
+		{name: "negative one uses one form", num: -1, want: "товар"},
+		{name: "negative two uses two form", num: -2, want: "товара"},
+		{name: "negative eleven uses five form", num: -11, want: "товаров"},
+		{name: "negative twenty one uses one form", num: -21, want: "товар"},
+		{name: "negative forty two uses two form", num: -42, want: "товара"},
+		{name: "negative hundred one uses one form", num: -101, want: "товар"},
 	}
 
 	for _, tc := range cases {
@@ -239,7 +245,7 @@ func TestDecimalToWords(t *testing.T) {
 		{
 			name:    "large number from README",
 			decimal: "6453345242432.42",
-			want:    "шесть триллионов четыреста пятьдесят три миллиарда триста сорок пять миллионов двести сорок две тысячи четыреста тридцать два целых сорок две сотых",
+			want:    "шесть триллионов четыреста пятьдесят три миллиарда триста сорок пять миллионов двести сорок две тысячи четыреста тридцать две целых сорок две сотых",
 			wantErr: false,
 		},
 		{
@@ -263,7 +269,7 @@ func TestDecimalToWords(t *testing.T) {
 		{
 			name:    "truncate extra decimals",
 			decimal: "1.999",
-			want:    "один целых девяносто девять сотых",
+			want:    "одна целая девяносто девять сотых",
 			wantErr: false,
 		},
 		{
@@ -282,6 +288,24 @@ func TestDecimalToWords(t *testing.T) {
 			name:    "two hundredths",
 			decimal: "10.02",
 			want:    "десять целых две сотых",
+			wantErr: false,
+		},
+		{
+			name:    "one and feminine celaya",
+			decimal: "1.5",
+			want:    "одна целая пятьдесят сотых",
+			wantErr: false,
+		},
+		{
+			name:    "two feminine celyh",
+			decimal: "2.5",
+			want:    "две целых пятьдесят сотых",
+			wantErr: false,
+		},
+		{
+			name:    "compound twenty one feminine",
+			decimal: "21.15",
+			want:    "двадцать одна целая пятнадцать сотых",
 			wantErr: false,
 		},
 		{
@@ -343,10 +367,22 @@ func TestDecimalToWordsPrecision(t *testing.T) {
 			want:      "три целых сто сорок пять тысячных",
 		},
 		{
-			name:      "one and five tenths",
+			name:      "one and five tenths feminine",
 			decimal:   "1.5",
 			precision: 1,
-			want:      "один целых пять десятых",
+			want:      "одна целая пять десятых",
+		},
+		{
+			name:      "two and five tenths feminine",
+			decimal:   "2.5",
+			precision: 1,
+			want:      "две целых пять десятых",
+		},
+		{
+			name:      "compound twenty one and fifteen hundredths",
+			decimal:   "21.15",
+			precision: 2,
+			want:      "двадцать одна целая пятнадцать сотых",
 		},
 		{
 			name:      "invalid precision too low",
@@ -395,7 +431,7 @@ func TestDecimalValueToWords(t *testing.T) {
 		{
 			name:    "large number from README",
 			decimal: decimal.RequireFromString("6453345242432.42"),
-			want:    "шесть триллионов четыреста пятьдесят три миллиарда триста сорок пять миллионов двести сорок две тысячи четыреста тридцать два целых сорок две сотых",
+			want:    "шесть триллионов четыреста пятьдесят три миллиарда триста сорок пять миллионов двести сорок две тысячи четыреста тридцать две целых сорок две сотых",
 			wantErr: false,
 		},
 		{
@@ -419,13 +455,13 @@ func TestDecimalValueToWords(t *testing.T) {
 		{
 			name:    "truncate extra decimals",
 			decimal: decimal.RequireFromString("1.999"),
-			want:    "один целых девяносто девять сотых",
+			want:    "одна целая девяносто девять сотых",
 			wantErr: false,
 		},
 		{
 			name:    "truncate not round",
 			decimal: decimal.RequireFromString("1.995"),
-			want:    "один целых девяносто девять сотых",
+			want:    "одна целая девяносто девять сотых",
 			wantErr: false,
 		},
 		{
@@ -443,7 +479,19 @@ func TestDecimalValueToWords(t *testing.T) {
 		{
 			name:    "negative number",
 			decimal: decimal.NewFromFloat(-42.15),
-			want:    "минус сорок два целых пятнадцать сотых",
+			want:    "минус сорок две целых пятнадцать сотых",
+			wantErr: false,
+		},
+		{
+			name:    "negative one and half",
+			decimal: decimal.NewFromFloat(-1.5),
+			want:    "минус одна целая пятьдесят сотых",
+			wantErr: false,
+		},
+		{
+			name:    "negative compound twenty one",
+			decimal: decimal.NewFromFloat(-21.15),
+			want:    "минус двадцать одна целая пятнадцать сотых",
 			wantErr: false,
 		},
 		{
