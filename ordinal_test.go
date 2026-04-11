@@ -60,15 +60,15 @@ func TestOrdinal(t *testing.T) {
 //
 // The fix routes the magnitude through uint64 (uint64(math.MaxInt)+1)
 // and never evaluates `-math.MinInt`, so the call must now:
-//   1. return successfully,
-//   2. start with the "минус " prefix,
-//   3. produce a non-trivial body (more than just "минус "),
-//   4. be consistent across all three grammatical genders for everything
-//      after the prefix (magnitude is the same, gender only affects
-//      ordinal endings, and the body for math.MaxInt+1 is the same for
-//      masculine/feminine/neuter roots up to suffix choices — at minimum,
-//      all three must share the word "восемь", which appears in the
-//      highest triad).
+//  1. return successfully,
+//  2. start with the "минус " prefix,
+//  3. produce a non-trivial body (more than just "минус "),
+//  4. be consistent across all three grammatical genders for everything
+//     after the prefix (magnitude is the same, gender only affects
+//     ordinal endings, and the body for math.MaxInt+1 is the same for
+//     masculine/feminine/neuter roots up to suffix choices — at minimum,
+//     all three must share the word "восемь", which appears in the
+//     highest triad).
 func TestOrdinalMinInt(t *testing.T) {
 	t.Parallel()
 
@@ -105,14 +105,14 @@ func TestOrdinalNegativeBasic(t *testing.T) {
 
 	cases := []struct {
 		name   string
+		want   string
 		n      int
 		gender Gender
-		want   string
 	}{
-		{name: "-1 masculine", n: -1, gender: GenderMasculine, want: "минус первый"},
-		{name: "-2 feminine", n: -2, gender: GenderFeminine, want: "минус вторая"},
-		{name: "-42 masculine", n: -42, gender: GenderMasculine, want: "минус сорок второй"},
-		{name: "-1000 masculine", n: -1000, gender: GenderMasculine, want: "минус тысячный"},
+		{name: "-1 masculine", want: "минус первый", n: -1, gender: GenderMasculine},
+		{name: "-2 feminine", want: "минус вторая", n: -2, gender: GenderFeminine},
+		{name: "-42 masculine", want: "минус сорок второй", n: -42, gender: GenderMasculine},
+		{name: "-1000 masculine", want: "минус тысячный", n: -1000, gender: GenderMasculine},
 	}
 
 	for _, tc := range cases {
