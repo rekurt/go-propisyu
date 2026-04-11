@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 	"unicode"
+	"unicode/utf8"
 )
 
 // TestReadmeCoversPublicAPI walks the package AST and asserts that every
@@ -134,7 +135,8 @@ func addIfExported(name string, dst *[]string, seen map[string]bool) {
 	if name == "" || seen[name] {
 		return
 	}
-	if !unicode.IsUpper([]rune(name)[0]) {
+	first, _ := utf8.DecodeRuneInString(name)
+	if !unicode.IsUpper(first) {
 		return
 	}
 	seen[name] = true
@@ -143,7 +145,10 @@ func addIfExported(name string, dst *[]string, seen map[string]bool) {
 
 func readReadme(t *testing.T, path string) string {
 	t.Helper()
-	b, err := os.ReadFile(path)
+	// path is always a hardcoded README filename from the test callers,
+	// never user input — gosec's taint analysis can't see that, so we
+	// suppress G304 explicitly.
+	b, err := os.ReadFile(path) //#nosec G304 -- test-only, hardcoded README path
 	if err != nil {
 		t.Fatalf("read %s: %v", path, err)
 	}
