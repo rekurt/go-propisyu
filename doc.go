@@ -7,7 +7,7 @@
 //
 // # Features
 //
-//   - Numbers up to duodecillions (10^39)
+//   - Full Go int range (±9.2 × 10¹⁸ on 64-bit)
 //   - Three grammatical genders: masculine, feminine, neuter
 //   - Automatic noun declension via [Decline]
 //   - Decimal number support via strings or [github.com/shopspring/decimal]
