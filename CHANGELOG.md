@@ -7,6 +7,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-04-12
+
+### Fixed
+
+- `Ordinal(math.MinInt, gender)` used to recurse into `Ordinal(-n, gender)`,
+  but `-math.MinInt == math.MinInt` in two's-complement, so the program
+  crashed with `fatal error: stack overflow`. The negative branch now
+  lifts the magnitude through `uint64` (`uint64(math.MaxInt)+1` for the
+  `MinInt` case), identical to the pattern already used by
+  `convertIntToWords` since v0.4.0. (#19)
+- `DecimalToWords` and `DecimalToWordsPrecision` called `strings.TrimSpace`
+  for sign detection but kept the untrimmed input for the main parsing
+  path, so leading whitespace crashed `strconv.Atoi` with a confusing
+  "invalid syntax" error while the sign-detection path silently accepted
+  the same whitespace. Both functions now apply `TrimSpace` uniformly,
+  making `" 123.45"`, `"\t1.5"`, and `"\n-0.50"` valid inputs. (#20)
+- `MoneyFromString("-0.xx", …)` silently dropped the minus sign because
+  `strconv.Atoi("-0") == 0` and `Money` carries no sign information. The
+  function now preserves the sign through the same guard pattern PR #16
+  added for `DecimalToWords` / `DecimalValueToWords` /
+  `DecimalToWordsPrecision`. Consistency:
+  `DecimalToWords("-0.50")` → `"минус ноль целых пятьдесят сотых"` and
+  `MoneyFromString("-0.50", CurrencyRUB)` → `"минус ноль рублей пятьдесят
+  копеек"`. (#21)
+- `DecimalValueToWords` silently produced **wrong output** for any
+  `decimal.Decimal` whose whole part overflowed `int64` (e.g.
+  `10^29.99` rendered as a random `int64`-wrapped phrase). The previous
+  `whole > math.MaxInt64` guard was a tautology on 64-bit platforms
+  where `math.MaxInt64 == math.MaxInt`. The check now uses
+  `d.Truncate(0).BigInt().IsInt64()` **before** calling `IntPart`, so
+  out-of-range inputs return `ErrNumberTooLarge` instead of garbage.
+  (#22)
+
+### Changed
+
+- `convertPositiveUint64ToWords` used O(triads²) allocations due to
+  `parts = append([]string{triadWords}, parts...)` prepend. Replaced
+  with preallocated linear append + in-place reverse: for
+  `math.MaxInt` (7 triads) allocs/op drop from 52 to 40 (−23%) and
+  time/op from ~1500 ns to ~1300 ns (−14%) on Apple M1 Pro. The
+  improvement scales with triad count — duodecillion-scale inputs
+  (13 triads) previously did ~169 inner copies; they now do 13
+  appends plus one reverse. No public API or output changes. (#23)
+
+### Documentation
+
+- `examples/examples_test.go` now has runnable godoc `Example*`
+  functions for the v0.4.0-introduced APIs that were missing preview
+  on pkg.go.dev: `ExampleOrdinal`, `ExampleMoney`, `ExampleMoneyFromString`,
+  `ExampleDecimalToWordsPrecision`, plus tenths and higher-precision
+  variants. (#24)
+
+### CI
+
+- `test: add readme consistency checks to prevent documentation drift`
+  introduced a package-level test that walks `go/ast` and asserts every
+  exported top-level declaration is mentioned in both `README.md` and
+  `README_EN.md`, plus a `## ` / `### ` header parity check between RU
+  and EN. No workflow changes — runs as part of the existing `test`
+  job. (#18)
+- `ci: add govulncheck step to the lint job` now runs
+  `golang.org/x/vuln/cmd/govulncheck@v1.1.4` on every push and pull
+  request. Current master is clean (0 reachable vulnerabilities;
+  6 non-reachable vulns in transitively-required modules and 1 in an
+  imported-but-not-called package are correctly ignored). (#25)
+
 ## [0.4.0] - 2026-04-11
 
 ### Added
